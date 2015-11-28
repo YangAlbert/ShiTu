@@ -1,11 +1,13 @@
 package com.shitu.www.shitu;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -38,6 +40,15 @@ public class MapActivity extends Activity {
 
         final TextView secondLine_tv = (TextView) findViewById(R.id.secondLine_textView);
         secondLine_tv.setOnClickListener(tvListener);
+
+        Button navButton = (Button) findViewById(R.id.nav_button);
+        navButton.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent navActivity = new Intent(getApplicationContext(), CameraActivity.class);
+                startActivity(navActivity);
+            }
+        });
     }
 
     @Override
