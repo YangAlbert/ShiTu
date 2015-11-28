@@ -22,6 +22,7 @@ import android.app.Dialog;
 import android.app.DialogFragment;
 import android.app.Fragment;
 import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.DialogInterface;
 import android.content.res.Configuration;
 import android.graphics.ImageFormat;
@@ -501,6 +502,8 @@ public class Camera2BasicFragment extends Fragment implements View.OnClickListen
             e.printStackTrace();
         } catch (InterruptedException e) {
             throw new RuntimeException("Interrupted while trying to lock camera opening.", e);
+        } catch (SecurityException e) {
+//            Toast.makeText(, "Please accept camera using", Toast.LENGTH_LONG).show();
         }
     }
 
