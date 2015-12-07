@@ -1,5 +1,7 @@
-package com.shitu.routing;
+package com.example.donglianglyu.myapplication;
+import com.example.donglianglyu.myapplication.EdgeAttribute;
 
+import com.example.donglianglyu.myapplication.EdgeAttribute;
 /**
  * Created by DongliangLyu on 2015/12/3.
  */
