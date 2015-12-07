@@ -1,4 +1,4 @@
-package com.shitu.www.shitu;
+package com.shitu.indoor;
 
 import android.app.Activity;
 import android.content.Intent;

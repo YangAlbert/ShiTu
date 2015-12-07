@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.shitu.www.shitu;
+package com.shitu.indoor;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -55,7 +55,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
-import com.shitu.www.shitu.R;
+import com.shitu.indoor.R;
 
 import java.io.File;
 import java.io.FileOutputStream;

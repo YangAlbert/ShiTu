@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.shitu.www.shitu;
+package com.shitu.indoor;
 
 import android.content.Context;
 import android.util.AttributeSet;

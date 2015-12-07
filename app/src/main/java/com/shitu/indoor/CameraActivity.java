@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package com.shitu.www.shitu;
+package com.shitu.indoor;
 
 import android.app.Activity;
 import android.os.Bundle;
 
-import com.shitu.www.shitu.R;
+import com.shitu.indoor.R;
 
 public class CameraActivity extends Activity {
 
