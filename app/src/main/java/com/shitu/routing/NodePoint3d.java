@@ -11,9 +11,9 @@ public class NodePoint3d {
     int index;
     double time = 1.0E10;
     //当前节点的其他邻域节点索引
-    ArrayList dualNodeIndex;
+    ArrayList dualNodeIndex = new ArrayList<>();
     //所属的边索引
-    ArrayList edgeIndex;
+    ArrayList edgeIndex = new ArrayList<>();
 
     public NodePoint3d() {
         pt = new Point3d();

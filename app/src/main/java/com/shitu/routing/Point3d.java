@@ -9,6 +9,18 @@ public class Point3d {
     double y;
     int floor;
 
+    public double Lat() {
+        return x;
+    }
+
+    public double Lon() {
+        return y;
+    }
+
+    public int Floor() {
+        return floor;
+    }
+
     //默认构造函数
     public Point3d(){
         double x = 0.0;
