@@ -1,27 +1,105 @@
-apply plugin: 'com.android.application'
+apply plugin: 'com.android.model.application'
 
-android {
-    compileSdkVersion 'Google Inc.:Google APIs:23'
-    buildToolsVersion "23.0.2"
-    defaultConfig {
-        applicationId "com.shitu.indoor"
-        minSdkVersion 21
-        targetSdkVersion 23
-        versionCode 1
-        versionName "1.0"
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+//def ARTK_SDK_PATH = file("F:/CV/ARToolKit5-bin-5.3.1-Android").toString()
+
+model {
+/*
+    repositories {
+        libs(PrebuiltLibraries) {
+            artk {
+                headers.srcDir "${ARTK_SDK_PATH}/include"
+                binaries.withType(StaticLibraryBinary) {
+                    staticLibraryFile = file("${ARTK_SDK_PATH}/android/obj/local/${targetPlatform.getName()}/libar2.a")
+                }
+            }
         }
     }
-    productFlavors {
+*/
+    android {
+        compileSdkVersion = 23
+        buildToolsVersion = "23.0.2"
+
+        defaultConfig.with {
+            applicationId = "com.shitu.indoor"
+            minSdkVersion.apiLevel = 7
+            targetSdkVersion.apiLevel = 23
+            versionCode = 1
+            versionName = "1.0"
+        }
+    }
+
+    compileOptions.with {
+//        sourceCompability=JavaVersion.VERSION_1_7
+//        targetCompability=JavaVersion.VERSION_1_7
+    }
+
+    android.ndk {
+        moduleName = "nftKit"
+        stl = "c++_shared"
+        CFlags.addAll(["-I${file("../../ARToolKit5-bin-5.3.1-Android/include")}".toString(),
+                       "-I${file("../../ARToolKit5-bin-5.3.1-Android/include/android")}".toString()])
+        cppFlags.addAll(["-I${file("../../ARToolKit5-bin-5.3.1-Android/include")}".toString(),
+                         "-I${file("../../ARToolKit5-bin-5.3.1-Android/include/android")}".toString(),
+                         "-std=c++11",
+                         "-frtti",
+                         "-fexceptions",
+                         "-Wno-extern-c-compat"])
+//        toolchain = "clang"
+        ldLibs.addAll(['log', 'GLESv1_CM', 'z'])
+//        ldFlags.add("-L${file("../../ARToolKit5-bin-5.3.1-Android/android/obj/local/${targetPlatform.getName()}")}".toString())
+        ldFlags.add("-L${file("../../ARToolKit5-bin-5.3.1-Android/android/obj/local/armeabi-v7a")}".toString())
+        ldLibs.addAll(["ar2", "kpm", "util", "eden", "argsub_es", "armulti", "arosg",
+                       "ar", "aricp", "jpeg", "arvideo"])
+        ldLibs.addAll(['osgdb_osg','osgdb_ive',
+                       'osgdb_jpeg','osgdb_gif','gif','osgdb_tiff','tiff',
+                       'osgdb_bmp','osgdb_png','png','osgdb_tga',
+                       'osgdb_freetype','ft2',
+                       'osgAnimation','osgFX','osgParticle','osgPresentation',
+                       'osgShadow','osgSim','osgTerrain','osgText','osgVolume',
+                       'osgWidget','osgViewer','osgGA','osgDB','osgUtil',
+                       'osgdb_deprecated_osg',
+                       'osgdb_deprecated_osganimation',
+                       'osgdb_deprecated_osgfx',
+                       'osgdb_deprecated_osgparticle',
+                       'osgdb_deprecated_osgshadow',
+                       'osgdb_deprecated_osgsim',
+                       'osgdb_deprecated_osgterrain',
+                       'osgdb_deprecated_osgtext',
+                       'osgdb_deprecated_osgviewer',
+                       'osgdb_deprecated_osgvolume',
+                       'osgdb_deprecated_osgwidget',
+                       'osg','OpenThreads'])
+        ldFlags.add("-L${file("../../ARToolKit5-bin-5.3.1-Android/android/jni/curl/libs/armeabi-v7a")}".toString())
+        ldLibs.add('curl')
+        ldFlags.add("-L${file("../../ARToolKit5-bin-5.3.1-Android/android/jni/curl/libs/armeabi-v7a")}".toString())
+        ldLibs.add('curl')
+        ldLibs.add('cpufeatures')
+//        abiFilters.addAll(["armeabi", "armeabi-v7a"])
+        abiFilters.add("armeabi-v7a")
+    }
+/*
+    android.sources {
+        main {
+            jni {
+                dependencies {
+                    library "artk"
+                }
+            }
+        }
+    }
+*/
+    android.buildTypes {
+        release {
+                minifyEnabled = false
+                proguardFiles.add(file('proguard-rules.pro'))
+        }
     }
 }
 
 dependencies {
-    compile fileTree(include: ['*.jar'], dir: 'libs')
-    testCompile 'junit:junit:4.12'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:23.1.1'
+    testCompile 'junit:junit:4.12'
+    compile project(':arbase')
 }
+
