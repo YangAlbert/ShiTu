@@ -2,6 +2,8 @@ package com.shitu.indoor;
 
 import com.shitu.indoor.R;
 import com.shitu.arbase.camera.CameraPreferencesActivity;
+import com.shitu.orientation.sensors.Orientation;
+import com.shitu.orientation.utils.OrientationSensorInterface;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -15,6 +17,7 @@ import android.opengl.GLSurfaceView;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -28,7 +31,7 @@ import android.widget.FrameLayout;
 /**
  * Created by yangy-z on 2015/12/7.
  */
-public class nftActivity extends Activity {
+public class nftActivity extends Activity implements OrientationSensorInterface {
     private static final String TAG = "nft";
 
     static {
@@ -57,11 +60,15 @@ public class nftActivity extends Activity {
 
     private FrameLayout mainLayout;
 
+    private Orientation orientationSensor;
+
     /** Called when the activity is first created. */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        orientationSensor = new Orientation(this.getApplicationContext(), this);
 
         boolean needActionBar = false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
@@ -102,6 +109,10 @@ public class nftActivity extends Activity {
     public void onResume() {
         super.onResume();
 
+        orientationSensor.init(1.0, 1.0, 1.0);
+        orientationSensor.on(2);
+        orientationSensor.isSupport();
+
         // Update info on whether we have an Internet connection.
         ConnectivityManager cm = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
@@ -132,7 +143,10 @@ public class nftActivity extends Activity {
 
     @Override
     protected void onPause() {
+        orientationSensor.off();
+
         super.onPause();
+
         if (glView != null) glView.onPause();
 
         // System hardware must be release in onPause(), so it's available to
@@ -156,6 +170,13 @@ public class nftActivity extends Activity {
         super.onDestroy();
 
         nftActivity.nativeDestroy();
+    }
+
+    @Override
+    public void orientation(Double AZIMUTH, Double PITCH, Double ROLL) {
+        Log.d("Azimuth", String.valueOf(AZIMUTH));
+        Log.d("Pitch", String.valueOf(PITCH));
+        Log.d("Roll", String.valueOf(ROLL));
     }
 
     private void updateNativeDisplayParameters()
