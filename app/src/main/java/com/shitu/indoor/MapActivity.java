@@ -101,25 +101,39 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
     private void initRoadManager() {
         ArrayList<SimpleEdge3d> edgeList = new ArrayList<>();
-        Point3d p0 = new Point3d(40.0447171339482, 116.277488101602, 6);
-        Point3d p1 = new Point3d(40.0445438445209, 116.277629246312, 6);
+//        Point3d p0 = new Point3d(40.0447171339482, 116.277488101602, 6);
+//        Point3d p1 = new Point3d(40.0445438445209, 116.277629246312, 6);
+//
+//        edgeList.add(new SimpleEdge3d(p0, p1));
+//
+//        p0 = p1;
+//        p1 = new Point3d(40.0450319926883, 116.277531574186, 6);
+//        edgeList.add(new SimpleEdge3d(p0, p1));
 
-        edgeList.add(new SimpleEdge3d(p0, p1));
+//        p0 = p1;
+//        p1 = new Point3d(40.0450019453328, 116.276963342318, 6);
+//        edgeList.add(new SimpleEdge3d(p0, p1));
 
-        p0 = p1;
-        p1 = new Point3d(40.0450319926883, 116.277531574186, 6);
+        Point3d p0 = new Point3d(40.0441536550435, 116.276926688662, 6);
+        Point3d p1 = new Point3d(40.0440538156341, 116.276939109173, 6);
+        Point3d p2 = new Point3d(40.0442427972498, 116.277682787277, 6);
+        Point3d p3 = new Point3d(40.0449381024586, 116.276785405348, 6);
+        Point3d p4 = new Point3d(40.0450153581401, 116.277536846271, 6);
+        Point3d p5 = new Point3d(40.0445884546477, 116.277198053464, 6);
         edgeList.add(new SimpleEdge3d(p0, p1));
-
-        p0 = p1;
-        p1 = new Point3d(40.0450019453328, 116.276963342318, 6);
-        edgeList.add(new SimpleEdge3d(p0, p1));
+        edgeList.add(new SimpleEdge3d(p0, p2));
+        edgeList.add(new SimpleEdge3d(p0, p3));
+        edgeList.add(new SimpleEdge3d(p3, p4));
+        edgeList.add(new SimpleEdge3d(p0, p5));
+        edgeList.add(new SimpleEdge3d(p3, p5));
+        edgeList.add(new SimpleEdge3d(p2, p4));
 
         mRoadManager = new com.shitu.routing.RoadManager(edgeList);
     }
 
     private void testRouting() {
-        mRoadManager.SetStartPoint(new Point3d(40.0444760508037, 116.277694375514, 6));
-        mRoadManager.SetEndPoint(new Point3d(40.0448541827036, 116.276926747211, 6));
+        mRoadManager.SetStartPoint(new Point3d(40.0450098982271, 116.27752735798, 6));
+        mRoadManager.SetEndPoint(new Point3d(40.0446070055428, 116.277199421868, 6));
 
         ArrayList<Point3d> way = mRoadManager.GetRoad();
 

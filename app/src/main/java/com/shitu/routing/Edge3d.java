@@ -25,7 +25,8 @@ public class Edge3d {
     public Edge3d(Point3d startPt0, Point3d endPt0){
         startPt = startPt0;
         endPt = endPt0;
-        length = startPt.SquareDistanceTo2(endPt);
+        double squareLength = startPt.SquareDistanceTo2(endPt);
+        length = Math.sqrt(squareLength);
         switch(eType)
         {
             case FLATEDGE:
@@ -41,7 +42,8 @@ public class Edge3d {
 
     public void Initial()
     {
-        length = startPt.SquareDistanceTo2(endPt);
+        double squareLength = startPt.SquareDistanceTo2(endPt);
+        length = Math.sqrt(squareLength);
 
         switch(eType)
         {

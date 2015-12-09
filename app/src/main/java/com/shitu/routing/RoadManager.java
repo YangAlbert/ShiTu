@@ -63,7 +63,7 @@ public class RoadManager  {
 
     private ArrayList<NodePoint3d> GetNodePoints()
     {
-        double distError = 10.0;
+        double distError = 1;
         ArrayList<NodePoint3d> nodePts = new ArrayList<NodePoint3d>(edgeList.size());
 
         //第0条边的起始, 终止点分别作为第0个和第1个节点
@@ -111,31 +111,31 @@ public class RoadManager  {
             }
             else if (hasStartPt && !hasEndPt) {
                 nodePts.get(startPtIndex).edgeIndex.add(i);
-                nodePts.get(startPtIndex).dualNodeIndex.add(nodePts.size() + 1);
+                nodePts.get(startPtIndex).dualNodeIndex.add(nodePts.size());
 
-                NodePoint3d endNote = new NodePoint3d(endPt, nodePts.size() + 1);
+                NodePoint3d endNote = new NodePoint3d(endPt, nodePts.size());
                 endNote.edgeIndex.add(i);
                 endNote.dualNodeIndex.add(startPtIndex);
                 nodePts.add(endNote);
             }
             else if (!hasStartPt && hasEndPt) {
-                NodePoint3d startNote = new NodePoint3d(startPt, nodePts.size() + 1);
+                NodePoint3d startNote = new NodePoint3d(startPt, nodePts.size());
                 startNote.edgeIndex.add(i);
                 startNote.dualNodeIndex.add(endPtIndex);
                 nodePts.add(startNote);
 
                 nodePts.get(endPtIndex).edgeIndex.add(i);
-                nodePts.get(endPtIndex).dualNodeIndex.add(nodePts.size() + 1);
+                nodePts.get(endPtIndex).dualNodeIndex.add(nodePts.size());
             }
             else {
-                NodePoint3d startNote = new NodePoint3d(startPt, nodePts.size() + 1);
+                NodePoint3d startNote = new NodePoint3d(startPt, nodePts.size());
                 startNote.edgeIndex.add(i);
-                startNote.dualNodeIndex.add(nodePts.size() + 2);
+                startNote.dualNodeIndex.add(nodePts.size() + 1);
                 nodePts.add(startNote);
 
-                NodePoint3d endNote = new NodePoint3d(endPt, nodePts.size() + 2);
+                NodePoint3d endNote = new NodePoint3d(endPt, nodePts.size() + 1);
                 endNote.edgeIndex.add(i);
-                endNote.dualNodeIndex.add(nodePts.size() + 1);
+                endNote.dualNodeIndex.add(nodePts.size());
                 nodePts.add(endNote);
             }
         }
@@ -199,11 +199,11 @@ public class RoadManager  {
         int minOrder = GetMinNodeOrder(candidateNodePts);
         double minTimeNew = candidateNodePts.get(minOrder).time;
 
-        candidateNodePts.remove(minOrder);
+        //candidateNodePts.remove(minOrder);
 
         int nodePtSize = nodePts.size();
         int k = 1;
-        while (candidateNodePts.size() > 1 && k < nodePtSize)
+        while (candidateNodePts.size() >= 1 && k < nodePtSize)
         {
             ArrayList dualNodeIndex = candidateNodePts.get(minOrder).dualNodeIndex;
             ArrayList edgeIndex = candidateNodePts.get(minOrder).edgeIndex;
@@ -220,12 +220,13 @@ public class RoadManager  {
                 }
             }
 
-            minOrder = GetMinNodeOrder(candidateNodePts);
-            if (candidateNodePts.get(minOrder).index == endNode.index) break;
-
             candidateNodePts.remove(minOrder);
+            minOrder = GetMinNodeOrder(candidateNodePts);
             minTimeOld = minTimeNew;
             minTimeNew = candidateNodePts.get(minOrder).time;
+
+            if (candidateNodePts.get(minOrder).index == endNode.index) break;
+
             k++;
         }
 
@@ -235,6 +236,7 @@ public class RoadManager  {
     {
         NodePoint3d currentNode = endNode;
         ArrayList<Point3d> ptList = new ArrayList<Point3d>(100);
+        ptList.add(currentNode.pt);
 
         int k = 0;
         while (currentNode.time > 0.1 && k < nodePts.size())
@@ -244,7 +246,8 @@ public class RoadManager  {
                 int dualNodeIndex = (int)currentNode.dualNodeIndex.get(i);
                 int edgeIndex = (int)currentNode.edgeIndex.get(i);
                 NodePoint3d nextNode = nodePts.get(dualNodeIndex);
-                if ((nextNode.time + edgeList.get(edgeIndex).time - currentNode.time) < 0.1)
+                double nextNodeT = currentNode.time - edgeList.get(edgeIndex).time;
+                if (Math.abs(nextNodeT - nextNode.time) < 1.0)
                 {
                     ptList.add(nextNode.pt);
                     currentNode = nextNode;
