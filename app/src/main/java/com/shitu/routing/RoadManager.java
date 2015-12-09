@@ -9,26 +9,45 @@ public class RoadManager  {
     Point3d startPt;
     Point3d endPt;
 
-    ArrayList<Edge3d> edges;
+    private NodePoint3d startNode;
+    private NodePoint3d endNode;
+
+    private ArrayList<Edge3d> edgeList;
+    //topological relation
+    private ArrayList<NodePoint3d> nodePts;
 
     public RoadManager(ArrayList<SimpleEdge3d> simpleEdges)
     {
-        edges = GetEdgeList(simpleEdges);
+        edgeList = GetEdgeList(simpleEdges);
+        nodePts = GetNodePoints();
     }
 
     public void SetStartPoint(Point3d startPt0)
     {
         startPt = startPt0;
+        startNode = GetNearestNode(startPt);
     }
 
     public void SetEndPoint(Point3d endPt0)
     {
         endPt = endPt0;
+        endNode = GetNearestNode(endPt);
     }
 
     public ArrayList<Point3d> GetRoad()
     {
-        return CalcShortestPath(edges);
+        RefreshTime();
+        CalcReachingTime();
+        return CalcShortestPath();
+    }
+
+    //Refresh node time
+    private void RefreshTime()
+    {
+        for (int i = 0; i < nodePts.size(); ++i)
+        {
+            nodePts.get(i).time = 1.0E10;
+        }
     }
 
     private ArrayList<Edge3d> GetEdgeList(ArrayList<SimpleEdge3d> sEdgeList)
@@ -42,7 +61,7 @@ public class RoadManager  {
         return edgeList;
     }
 
-    private ArrayList<NodePoint3d> GetNodePoints(ArrayList<Edge3d> edgeList)
+    private ArrayList<NodePoint3d> GetNodePoints()
     {
         double distError = 10.0;
         ArrayList<NodePoint3d> nodePts = new ArrayList<NodePoint3d>(edgeList.size());
@@ -124,20 +143,23 @@ public class RoadManager  {
         return nodePts;
     }
 
-    private NodePoint3d GetNearestNode(Point3d pt, ArrayList<NodePoint3d> nodePts)
+    private NodePoint3d GetNearestNode(Point3d pt)
     {
         NodePoint3d nodePt = nodePts.get(0);
-        double distance = pt.SquareDistanceTo(nodePt.pt);
+        double distance = pt.SquareDistanceTo2(nodePt.pt);
         for (int i = 1; i < nodePts.size(); ++i)
         {
-            double tempDist = pt.SquareDistanceTo(nodePts.get(i).pt);
-            if (tempDist < distance) nodePt = nodePts.get(i);
+            double tempDist = pt.SquareDistanceTo2(nodePts.get(i).pt);
+            if (tempDist < distance)
+            {
+                nodePt = nodePts.get(i);
+                distance = tempDist;
+            }
         }
         return nodePt;
     }
 
-    private void InitCandidateNodePoints(ArrayList<NodePoint3d> candidateNodePts,
-                                        ArrayList<NodePoint3d> nodePts, ArrayList<Edge3d> edgeList, NodePoint3d startNode)
+    private void InitCandidateNodePoints(ArrayList<NodePoint3d> candidateNodePts, NodePoint3d startNode)
     {
         int iSize = startNode.dualNodeIndex.size();
         for (int i = 0; i < iSize; ++i)
@@ -152,31 +174,29 @@ public class RoadManager  {
     }
 
     //计算时间最短的节点序号
-    private int GetMinNodeOrder(ArrayList<NodePoint3d> nodePts)
+    private int GetMinNodeOrder(ArrayList<NodePoint3d> localNodePts)
     {
         int order = 0;
-        double tempT = nodePts.get(0).time;
-        for (int i = 1; i < nodePts.size(); i++)
+        double localMinT = localNodePts.get(0).time;
+        for (int i = 1; i < localNodePts.size(); i++)
         {
-            if (nodePts.get(i).time < tempT) {
+            if (localNodePts.get(i).time < localMinT) {
                 order = i;
+                localMinT = localNodePts.get(i).time;
             }
         }
+
         return order;
     }
 
-    private ArrayList<NodePoint3d> CalcReachingTime(ArrayList<Edge3d> edgeList)
+    private void CalcReachingTime()
     {
-        ArrayList<NodePoint3d> nodePts = GetNodePoints(edgeList);
-
-        NodePoint3d startNode = GetNearestNode(startPt, nodePts);
-        NodePoint3d endNode = GetNearestNode(endPt, nodePts);
         startNode.time = 0.0;
         double minTimeOld = 0.0;
 
         ArrayList<NodePoint3d> candidateNodePts = new ArrayList<NodePoint3d>();
-        InitCandidateNodePoints(candidateNodePts, nodePts, edgeList, startNode);
-        int minOrder = GetMinNodeOrder(nodePts);
+        InitCandidateNodePoints(candidateNodePts, startNode);
+        int minOrder = GetMinNodeOrder(candidateNodePts);
         double minTimeNew = candidateNodePts.get(minOrder).time;
 
         candidateNodePts.remove(minOrder);
@@ -209,14 +229,11 @@ public class RoadManager  {
             k++;
         }
 
-        return nodePts;
     }
 
-    private ArrayList<Point3d> CalcShortestPath(ArrayList<Edge3d> edgeList)
+    private ArrayList<Point3d> CalcShortestPath()
     {
-        ArrayList<NodePoint3d> nodePts = CalcReachingTime(edgeList);
-        NodePoint3d currentNode = GetNearestNode(endPt, nodePts);
-
+        NodePoint3d currentNode = endNode;
         ArrayList<Point3d> ptList = new ArrayList<Point3d>(100);
 
         int k = 0;

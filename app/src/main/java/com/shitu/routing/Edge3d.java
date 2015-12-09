@@ -1,4 +1,5 @@
 package com.shitu.routing;
+//import com.shitu.routing.Point3d;
 
 /**
  * Created by DongliangLyu on 2015/12/3.
@@ -24,8 +25,7 @@ public class Edge3d {
     public Edge3d(Point3d startPt0, Point3d endPt0){
         startPt = startPt0;
         endPt = endPt0;
-        length = Math.sqrt( Math.pow((startPt0.x - endPt0.x), 2) + Math.pow((startPt0.y - endPt0.y), 2)
-                + Math.pow((startPt0.floor - endPt0.floor) * EdgeAttribute.floorHeight, 2) );
+        length = startPt.SquareDistanceTo2(endPt);
         switch(eType)
         {
             case FLATEDGE:
@@ -41,8 +41,7 @@ public class Edge3d {
 
     public void Initial()
     {
-        length = Math.sqrt( Math.pow((startPt.x - endPt.x), 2) + Math.pow((startPt.y - endPt.y), 2)
-                + Math.pow((startPt.floor - endPt.floor) * EdgeAttribute.floorHeight, 2) );
+        length = startPt.SquareDistanceTo2(endPt);
 
         switch(eType)
         {

@@ -21,7 +21,7 @@ model {
 
         defaultConfig.with {
             applicationId = "com.shitu.indoor"
-            minSdkVersion.apiLevel = 7
+            minSdkVersion.apiLevel = 10
             targetSdkVersion.apiLevel = 23
             versionCode = 1
             versionName = "1.0"
@@ -96,10 +96,19 @@ model {
     }
 }
 
+repositories {
+    mavenCentral()
+    flatDir {
+        dirs 'libs'
+    }
+}
+
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:23.1.1'
     testCompile 'junit:junit:4.12'
     compile project(':arbase')
+    compile 'org.osmdroid:osmdroid-android:5.0.1@aar'
+    compile 'org.slf4j:slf4j-android:1.7.12'
+    compile (name: 'osmbonuspack_v5.5', ext: 'aar')
 }
-
