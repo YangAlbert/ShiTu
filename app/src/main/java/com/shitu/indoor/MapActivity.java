@@ -1,17 +1,22 @@
 package com.shitu.indoor;
 
 import android.app.Activity;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import com.shitu.routing.Point3d;
 import com.shitu.routing.SimpleEdge3d;
 
+import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.overlays.MapEventsReceiver;
 import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
 import org.osmdroid.bonuspack.routing.RoadManager;
+import org.osmdroid.events.MapListener;
+import org.osmdroid.events.ScrollEvent;
+import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.MapTileProviderBase;
 import org.osmdroid.tileprovider.MapTileProviderBasic;
@@ -24,7 +29,11 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
 import org.osmdroid.util.GeoPoint;
+import org.osmdroid.util.ResourceProxyImpl;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.ItemizedIconOverlay;
+import org.osmdroid.views.overlay.MinimapOverlay;
+import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.TilesOverlay;
 
 import java.util.ArrayList;
@@ -50,7 +59,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
         mapView = (MapView) findViewById(R.id.mapview);
         mapView.setClickable(true);
-        mapView.setBuiltInZoomControls(false);
+        mapView.setBuiltInZoomControls(true);
         mapView.setMultiTouchControls(true);
         mapView.setUseDataConnection(false);
         mapView.setMaxZoomLevel(21);
@@ -64,6 +73,24 @@ public class MapActivity extends Activity implements MapEventsReceiver {
                 new MapTileModuleProviderBase[] { tileModuleProvider });
         final TilesOverlay tileOverlay = new TilesOverlay(mapProvider, getBaseContext());
         mapView.getOverlays().add(tileOverlay);
+
+        class OverlayMapListener implements MapListener {
+            @Override
+            public boolean onScroll(ScrollEvent e) {
+                e.getSource().invalidate();
+
+                return true;
+            }
+
+            @Override
+            public boolean onZoom(ZoomEvent e) {
+//                e.getSource().invalidate();
+                mapView.invalidate();
+
+                return true;
+            }
+        }
+        mapView.setMapListener(new OverlayMapListener());
 
         IMapController mapViewController = mapView.getController();
         mapViewController.setZoom(15);
@@ -151,8 +178,10 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     }
 
     private void testRouting() {
-        mRoadManager.SetStartPoint(new Point3d(40.0450098982271, 116.27752735798, 6));
-        mRoadManager.SetEndPoint(new Point3d(40.0446070055428, 116.277199421868, 6));
+        Point3d startPt = new Point3d(40.0450098982271, 116.27752735798, 6);
+        Point3d endPt = new Point3d(40.0446070055428, 116.277199421868, 6);
+        mRoadManager.SetStartPoint(startPt);
+        mRoadManager.SetEndPoint(endPt);
 
         ArrayList<Point3d> way = mRoadManager.GetRoad();
 
@@ -163,10 +192,28 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
         Polyline wayOverlay = new Polyline(this);
         wayOverlay.setPoints(ptArray);
-        wayOverlay.setColor(0xffffffff);
+        wayOverlay.setColor(0x0000ffff);
         wayOverlay.setWidth(3.0f);
 
+        // start and end point overlay.
+
+        Drawable startMk = getResources().getDrawable(R.drawable.start);
+        OverlayItem startItem = new OverlayItem("StartPoint", "where you start", new GeoPoint(startPt.Lat(), startPt.Lon()));
+        startItem.setMarker(startMk);
+
+        Drawable endMk = getResources().getDrawable(R.drawable.dest);
+        OverlayItem endItem = new OverlayItem("DestinationPoint", "where you go", new GeoPoint(endPt.Lat(), endPt.Lon()));
+        endItem.setMarker(endMk);
+
+        ArrayList<OverlayItem> itemArray = new ArrayList<>();
+        itemArray.add(startItem);
+        itemArray.add(endItem);
+
+        final ResourceProxy resProxy = new ResourceProxyImpl(getApplicationContext());
+        ItemizedIconOverlay<OverlayItem> itemOverlay = new ItemizedIconOverlay<OverlayItem>(itemArray, null, resProxy);
+
         mapView.getOverlays().add(wayOverlay);
+        mapView.getOverlays().add(itemOverlay);
         mapView.invalidate();
     }
 }
