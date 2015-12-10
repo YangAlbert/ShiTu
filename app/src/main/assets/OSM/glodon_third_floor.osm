@@ -1,0 +1,53 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' upload='true' generator='JOSM'>
+  <bounds minlat='40.0442548' minlon='116.2766603' maxlat='40.0450988' maxlon='116.2775883' origin='CGImap 0.4.0 (5221 thorn-01.openstreetmap.org)' />
+  <bounds minlat='40.0442548' minlon='116.2766603' maxlat='40.0450988' maxlon='116.2775883' origin='OpenStreetMap server' />
+  <node id='-51' action='modify' visible='true' lat='40.04500289144' lon='116.27742139835' />
+  <node id='-50' action='modify' visible='true' lat='40.04499741094' lon='116.27724958244' />
+  <node id='-48' action='modify' visible='true' lat='40.04490835286' lon='116.27728000817' />
+  <node id='-47' action='modify' visible='true' lat='40.04494260598' lon='116.27720662846' />
+  <node id='-45' action='modify' visible='true' lat='40.04485354783' lon='116.27726747993' />
+  <node id='-43' action='modify' visible='true' lat='40.04478230122' lon='116.27715472573' />
+  <node id='-42' action='modify' visible='true' lat='40.04487683997' lon='116.27711356151' />
+  <node id='-40' action='modify' visible='true' lat='40.04498096946' lon='116.27714577699' />
+  <node id='-39' action='modify' visible='true' lat='40.04497822921' lon='116.27692563785' />
+  <node id='-18' action='modify' visible='true' lat='40.04498677538' lon='116.27676476104' />
+  <node id='-16' action='modify' visible='true' lat='40.04462832381' lon='116.27676313523' />
+  <node id='-14' action='modify' visible='true' lat='40.04448021306' lon='116.27676313523' />
+  <node id='-12' action='modify' visible='true' lat='40.04448394694' lon='116.27697936769' />
+  <node id='-10' action='modify' visible='true' lat='40.04433459125' lon='116.27694847734' />
+  <node id='-8' action='modify' visible='true' lat='40.04435574999' lon='116.27718747111' />
+  <way id='-52' action='modify' visible='true'>
+    <nd ref='-50' />
+    <nd ref='-51' />
+  </way>
+  <way id='-49' action='modify' visible='true'>
+    <nd ref='-47' />
+    <nd ref='-48' />
+  </way>
+  <way id='-44' action='modify' visible='true'>
+    <nd ref='-42' />
+    <nd ref='-43' />
+    <nd ref='-45' />
+  </way>
+  <way id='-41' action='modify' visible='true'>
+    <nd ref='-39' />
+    <nd ref='-40' />
+  </way>
+  <way id='-20' action='modify' visible='true'>
+    <nd ref='-18' />
+    <nd ref='-16' />
+    <nd ref='-14' />
+    <nd ref='-12' />
+    <nd ref='-10' />
+    <nd ref='-8' />
+  </way>
+  <relation id='-22' action='modify' visible='true'>
+    <tag k='highway' v='pedestrian' />
+    <tag k='layer' v='0' />
+    <tag k='name' v='走廊' />
+    <tag k='smoothness' v='intermediate' />
+    <tag k='surface' v='ground' />
+    <tag k='width' v='0.5' />
+  </relation>
+</osm>
