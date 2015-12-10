@@ -12,9 +12,20 @@ import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
 import org.osmdroid.bonuspack.routing.RoadManager;
+import org.osmdroid.tileprovider.MapTileProviderArray;
+import org.osmdroid.tileprovider.MapTileProviderBase;
+import org.osmdroid.tileprovider.MapTileProviderBasic;
+import org.osmdroid.tileprovider.modules.IArchiveFile;
+import org.osmdroid.tileprovider.modules.MBTilesFileArchive;
+import org.osmdroid.tileprovider.modules.MapTileFileArchiveProvider;
+import org.osmdroid.tileprovider.modules.MapTileModuleProviderBase;
+import org.osmdroid.tileprovider.tilesource.ITileSource;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.tileprovider.tilesource.XYTileSource;
+import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.TilesOverlay;
 
 import java.util.ArrayList;
 
@@ -43,8 +54,16 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mapView.setMultiTouchControls(true);
         mapView.setUseDataConnection(false);
         mapView.setMaxZoomLevel(21);
-        // attention!!: need to rename tile folder in .zip file to "CycleMap";
-        mapView.setTileSource(TileSourceFactory.CYCLEMAP);
+
+        final ITileSource tileSource = new XYTileSource("GlodonMap", 15, 21, 256, ".png", null);
+        MapTileModuleProviderBase tileModuleProvider = new MapTileFileArchiveProvider(
+                new SimpleRegisterReceiver(getApplicationContext()),
+                tileSource, null);
+
+        MapTileProviderBase mapProvider = new MapTileProviderArray(tileSource, null,
+                new MapTileModuleProviderBase[] { tileModuleProvider });
+        final TilesOverlay tileOverlay = new TilesOverlay(mapProvider, getBaseContext());
+        mapView.getOverlays().add(tileOverlay);
 
         IMapController mapViewController = mapView.getController();
         mapViewController.setZoom(15);
