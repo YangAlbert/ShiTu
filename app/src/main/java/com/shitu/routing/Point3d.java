@@ -53,8 +53,13 @@ public class Point3d {
     public double SquareDistanceTo2(Point3d pt)
     {
         //spherical square distance
-        double earthRadius = 6.4E9;
-        double tempSum = Math.cos(y) * Math.cos(pt.y) * Math.cos(x - pt.x) + Math.sin(y) * Math.sin(pt.y);
+        double earthRadius = 6.4E6;
+        double arcX = x * Math.PI / 180;
+        double arcY = y * Math.PI / 180;
+
+        double ptX = pt.x * Math.PI / 180;
+        double ptY = pt.y * Math.PI / 180;
+        double tempSum = Math.cos(arcY) * Math.cos(ptY) * Math.cos(arcX - ptX) + Math.sin(arcY) * Math.sin(ptY);
         double flatDis = earthRadius * Math.acos(tempSum);
         return Math.pow(flatDis, 2) + Math.pow((floor - pt.floor) * EdgeAttribute.floorHeight, 2);
     }
