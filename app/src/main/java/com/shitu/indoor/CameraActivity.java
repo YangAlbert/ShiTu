@@ -17,9 +17,16 @@
 package com.shitu.indoor;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 
 import com.shitu.indoor.R;
+
+import org.osmdroid.views.MapController;
+
+import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class CameraActivity extends Activity {
 
@@ -32,6 +39,22 @@ public class CameraActivity extends Activity {
                     .replace(R.id.container, Camera2BasicFragment.newInstance())
                     .commit();
         }
+
+        locationLocked();
+    }
+
+    void locationLocked() {
+        Timer tm = new Timer("welcomeTimer");
+        tm.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                Intent mapActivity = new Intent(getApplicationContext(), MapActivity.class);
+                mapActivity.putExtra(MapActivity.ROOM_NUMBER_TOKEN, 631);
+                startActivity(mapActivity);
+
+                finish();
+            }
+        }, new Date(System.currentTimeMillis() + 3000));
     }
 
 }

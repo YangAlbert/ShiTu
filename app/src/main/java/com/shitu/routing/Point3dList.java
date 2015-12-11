@@ -20,8 +20,8 @@ public class Point3dList {
         return pts;
     }
 
-    //在欧氏坐标下计算路的长度
-    public double GetLength()
+    //计算路的欧氏长度, 输入为欧氏坐标
+    public double GetLength_Euler()
     {
         double length = 0.0;
         for (int i = 0; i < pts.size() - 1; ++i)
@@ -33,8 +33,8 @@ public class Point3dList {
         return length;
     }
 
-    //在经纬坐标下计算路的长度
-    public double GetLength2()
+    //计算路的长度，输入为经纬坐标
+    public double GetLength_GeoCoord()
     {
         double length = 0.0;
         for (int i = 0; i < pts.size() - 1; ++i)
