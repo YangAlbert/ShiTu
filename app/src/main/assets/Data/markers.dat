@@ -1,5 +1,5 @@
 # Number of markers
-1
+10
 
 # Entries for each marker. Format is:
 #
@@ -13,6 +13,42 @@
 #                  at time of writing, equals 5.0.
 # A blank line
 
-../DataNFT/pinball
+../DataNFT/logo
+NFT
+FILTER 15.0
+
+../DataNFT/0
+NFT
+FILTER 15.0
+
+../DataNFT/1
+NFT
+FILTER 15.0
+
+../DataNFT/2
+NFT
+FILTER 15.0
+
+../DataNFT/3
+NFT
+FILTER 15.0
+
+../DataNFT/4
+NFT
+FILTER 15.0
+
+../DataNFT/5
+NFT
+FILTER 15.0
+
+../DataNFT/6
+NFT
+FILTER 15.0
+
+../DataNFT/7
+NFT
+FILTER 15.0
+
+../DataNFT/8
 NFT
 FILTER 15.0
