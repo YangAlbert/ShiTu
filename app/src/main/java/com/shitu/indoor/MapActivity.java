@@ -41,7 +41,7 @@ import org.osmdroid.views.overlay.TilesOverlay;
 
 import java.util.ArrayList;
 
-public class MapActivity extends Activity implements MapEventsReceiver {
+public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
 
     public static final GeoPoint GLODON = new GeoPoint(40.044771, 116.277071);
 
@@ -92,15 +92,17 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         tryStartRoutingFromIntent();
     }
 
-    @Override
-    public boolean singleTapConfirmedHelper(GeoPoint p) {
-        return true;
-    }
-
-    @Override
-    public boolean longPressHelper(GeoPoint p) {
-        return true;
-    }
+//    @Override
+//    public boolean singleTapConfirmedHelper(GeoPoint p) {
+//        mapView.requestLayout();
+//        mapView.invalidate();
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean longPressHelper(GeoPoint p) {
+//        return true;
+//    }
 
     void initViewElements() {
         // hide nav info panel at first;
@@ -130,8 +132,10 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
         MapTileProviderBase mapProvider = new MapTileProviderArray(tileSource, null,
                 new MapTileModuleProviderBase[] { tileModuleProvider });
-        final TilesOverlay tileOverlay = new TilesOverlay(mapProvider, getBaseContext());
-        mapView.getOverlays().add(tileOverlay);
+//        final TilesOverlay tileOverlay = new TilesOverlay(mapProvider, getBaseContext());
+//        mapView.getOverlays().add(tileOverlay);
+
+        mapView.setTileProvider(mapProvider);
 
         class OverlayMapListener implements MapListener {
             @Override
@@ -144,6 +148,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
             @Override
             public boolean onZoom(ZoomEvent e) {
 //                e.getSource().invalidate();
+                mapView.requestLayout();
                 mapView.invalidate();
 
                 return true;
