@@ -4,25 +4,20 @@ package com.shitu.routing;
  * Created by LvDongliang on 2015/12/10.
  */
 public class ProjectPoint {
-    Point2d originPt;
+    Point2d originPt = new Point2d();
 
-    public ProjectPoint()
-    {
-        originPt = new Point2d();
-    }
-
-    public void SetOriginPt(Point2d spherePt0)
+    public ProjectPoint(Point2d originPt0)
     {
         //Set coordinate origin.
-        originPt.x = spherePt0.x * Math.PI / 180;
-        originPt.y = spherePt0.y * Math.PI / 180;
+        originPt.x = originPt0.x * Math.PI / 180;
+        originPt.y = originPt0.y * Math.PI / 180;
     }
 
-    public void SetOriginPt(Point3d spherePt0)
+    public ProjectPoint(Point3d originPt0)
     {
         //Set coordinate origin.
-        originPt.x = spherePt0.x * Math.PI / 180;
-        originPt.y = spherePt0.y * Math.PI / 180;
+        originPt.x = originPt0.x * Math.PI / 180;
+        originPt.y = originPt0.y * Math.PI / 180;
     }
 
     //Get projective point with Euclidean coordinate.
