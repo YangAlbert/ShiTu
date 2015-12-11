@@ -16,10 +16,12 @@ public class RoadManager  {
     private ArrayList<Edge3d> edgeList;
     //topological relation
     private ArrayList<NodePoint3d> nodePts;
+    private ArrayList<Room> mRoomList;
 
-    public RoadManager(ArrayList<SimpleEdge3d> simpleEdges)
+    public RoadManager(ArrayList<SimpleEdge3d> simpleEdges, ArrayList<Room> roomList)
     {
         edgeList = GetEdgeList(simpleEdges);
+        mRoomList = GetRoomList(roomList);
         nodePts = GetNodePoints();
     }
 
@@ -42,6 +44,38 @@ public class RoadManager  {
         return new Point3dList(CalcShortestPath());
     }
 
+    public Point3d GetRoomPosition(int roomNumber)
+    {
+        for (int i = 0; i < mRoomList.size(); ++i)
+        {
+            if (mRoomList.get(i).number == roomNumber) {
+                return mRoomList.get(i).pt;
+            }
+        }
+        return null;
+    }
+
+    public int GetRoomAngle(int roomNumber)
+    {
+        for (int i = 0; i < mRoomList.size(); ++i)
+        {
+            if (mRoomList.get(i).number == roomNumber) {
+                return mRoomList.get(i).angle;
+            }
+        }
+        return 0;
+    }
+
+    public ArrayList GetRoomNumbers()
+    {
+        ArrayList numbers = new ArrayList<>();
+        for (int i = 0; i < mRoomList.size(); ++i)
+        {
+            numbers.add(mRoomList.get(i).number);
+        }
+        return numbers;
+    }
+
     //Refresh node time
     private void RefreshTime()
     {
@@ -60,6 +94,17 @@ public class RoadManager  {
             edgeList.add(edge);
         }
         return edgeList;
+    }
+
+    private ArrayList<Room> GetRoomList(ArrayList<Room> roomList)
+    {
+        ArrayList<Room> tempList = new ArrayList<Room>();
+        for (int i = 0; i < roomList.size(); ++i)
+        {
+            Room room = new Room(roomList.get(i));
+            tempList.add(room);
+        }
+        return tempList;
     }
 
     private ArrayList<NodePoint3d> GetNodePoints()
@@ -262,6 +307,4 @@ public class RoadManager  {
         //返回最短路上的点序列
         return ptList;
     }
-
-
 }
