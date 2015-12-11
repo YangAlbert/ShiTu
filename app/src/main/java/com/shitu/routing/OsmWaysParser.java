@@ -119,11 +119,9 @@ public class OsmWaysParser {
                                 }
 
                                 if (start != null && end != null) {
-                                    SimpleEdge3d edge = new SimpleEdge3d();
-                                    edge.startPt.x = start.x;
-                                    edge.startPt.y = start.y;
-                                    edge.endPt.x = end.x;
-                                    edge.endPt.y = end.y;
+                                    Point3d startPt = new Point3d(start.x, start.y, 3);
+                                    Point3d endPt = new Point3d(end.x, end.y, 3);
+                                    SimpleEdge3d edge = new SimpleEdge3d(startPt, endPt);
                                     edges.add(edge);
                                 }
                             }
