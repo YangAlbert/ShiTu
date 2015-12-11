@@ -142,25 +142,6 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
 
         mapView.setTileProvider(mapProvider);
 
-        class OverlayMapListener implements MapListener {
-            @Override
-            public boolean onScroll(ScrollEvent e) {
-                e.getSource().invalidate();
-
-                return true;
-            }
-
-            @Override
-            public boolean onZoom(ZoomEvent e) {
-//                e.getSource().invalidate();
-                mapView.requestLayout();
-                mapView.invalidate();
-
-                return true;
-            }
-        }
-        mapView.setMapListener(new OverlayMapListener());
-
         IMapController mapViewController = mapView.getController();
         mapViewController.setZoom(19);
         mapViewController.setCenter(GLODON);
@@ -177,13 +158,9 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
         ArrayList<Room> roomList = osmParser.GetRawRooms();
         Assert.assertNotNull(roomList);
 
-        // 给 osm 文件瘦身的接口
-//        path = Environment.getExternalStorageDirectory() + "/osmdroid/Glodon_Outdoor_1.osm";
-//        ways_parser.WriteXml(path);
-
         mRoadManager = new com.shitu.routing.RoadManager(edgeList, roomList);
 
-//        showAllRoads();
+        showAllRoads();
     }
 
     private void testRouting() {

@@ -47,9 +47,9 @@ public class CameraActivity extends Activity {
                     .commit();
         }
 
-        mDetector = new TargetingDetector(TargetingDetector.Target.FACING_UP, MapActivity.class, this, true);
+//        mDetector = new TargetingDetector(TargetingDetector.Target.FACING_UP, MapActivity.class, this, true);
 
-//        locationLocked();
+        locationLocked();
     }
 
     void locationLocked() {
@@ -70,13 +70,17 @@ public class CameraActivity extends Activity {
     protected void onResume() {
         super.onResume();
 
-        mDetector.Start();
+        if (null != mDetector) {
+            mDetector.Start();
+        }
     }
 
     @Override
     protected void onPause() {
         // turn orientation sensor off
-        mDetector.Stop();
+        if (null != mDetector) {
+            mDetector.Stop();
+        }
 
         super.onPause();;
     }
