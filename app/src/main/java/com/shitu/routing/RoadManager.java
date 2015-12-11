@@ -59,6 +59,27 @@ public class RoadManager  {
         return null;
     }
 
+    public int GetRoomAngle(int roomNumber)
+    {
+        for (int i = 0; i < mRoomList.size(); ++i)
+        {
+            if (mRoomList.get(i).number == roomNumber) {
+                return mRoomList.get(i).angle;
+            }
+        }
+        return 0;
+    }
+
+    public ArrayList GetRoomNumbers()
+    {
+        ArrayList numbers = new ArrayList<>();
+        for (int i = 0; i < mRoomList.size(); ++i)
+        {
+            numbers.add(mRoomList.get(i).number);
+        }
+        return numbers;
+    }
+
     //Refresh node time
     private void RefreshTime()
     {
