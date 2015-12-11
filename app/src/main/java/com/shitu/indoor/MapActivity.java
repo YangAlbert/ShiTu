@@ -87,7 +87,7 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
         mapView.setBuiltInZoomControls(false);
         mapView.setMultiTouchControls(true);
         mapView.setUseDataConnection(false);
-        mapView.setMaxZoomLevel(null);
+        mapView.setMaxZoomLevel(22);
 
         initMapResource();
 
@@ -132,7 +132,7 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
     }
 
     private void initMapResource() {
-        final ITileSource tileSource = new XYTileSource("GlodonMap", 19, 23, 256, ".png", null);
+        final ITileSource tileSource = new XYTileSource("GlodonMap", 19, 22, 256, ".png", null);
         MapTileModuleProviderBase tileModuleProvider = new MapTileFileArchiveProvider(
                 new SimpleRegisterReceiver(getApplicationContext()),
                 tileSource, null);
