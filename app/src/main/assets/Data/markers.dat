@@ -1,5 +1,5 @@
 # Number of markers
-1
+11
 
 # Entries for each marker. Format is:
 #
@@ -12,6 +12,50 @@
 #                  value is AR_FILTER_TRANS_MAT_CUTOFF_FREQ_DEFAULT, which
 #                  at time of writing, equals 5.0.
 # A blank line
+
+../DataNFT/marker
+NFT
+FILTER 15.0
+
+../DataNFT/0
+NFT
+FILTER 15.0
+
+../DataNFT/1
+NFT
+FILTER 15.0
+
+../DataNFT/2
+NFT
+FILTER 15.0
+
+../DataNFT/3
+NFT
+FILTER 15.0
+
+../DataNFT/4
+NFT
+FILTER 15.0
+
+../DataNFT/5
+NFT
+FILTER 15.0
+
+../DataNFT/6
+NFT
+FILTER 15.0
+
+../DataNFT/7
+NFT
+FILTER 15.0
+
+../DataNFT/8
+NFT
+FILTER 15.0
+
+../DataNFT/test
+NFT
+FILTER 10.0
 
 ../DataNFT/pinball
 NFT
