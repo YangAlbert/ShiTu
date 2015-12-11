@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -13,8 +12,8 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.shitu.routing.OsmWaysParser;
 import com.shitu.routing.Point3d;
+import com.shitu.routing.Point3dList;
 import com.shitu.routing.ProjectPoint;
 import com.shitu.routing.SimpleEdge3d;
 
@@ -57,6 +56,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
     org.osmdroid.views.overlay.Overlay mStartOverlay = null;
     static Point3d mStartPoint = new Point3d();
+    static String mStartRoom;
     org.osmdroid.views.overlay.Overlay mEndOverlay = null;
     static Point3d mEndPoint = new Point3d();
 
@@ -64,6 +64,9 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
     LinearLayout mNavInfoLayout = null;
     TextView mEndInfo = null;
+
+    LinearLayout mRoutingInfoLayout = null;
+    TextView mRoutingInfo = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,6 +108,11 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mNavInfoLayout.setVisibility(View.INVISIBLE);
 
         mEndInfo = (TextView) findViewById(R.id.destInfoText);
+
+        mRoutingInfoLayout = (LinearLayout) findViewById(R.id.routingInfoLayout);
+        mRoutingInfoLayout.setVisibility(View.INVISIBLE);
+
+        mRoutingInfo = (TextView) findViewById(R.id.routingInfoText);
 
         // install button listener;
         Button searchBttn = (Button) findViewById(R.id.searchButton);
@@ -241,7 +249,8 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mRoadManager.SetStartPoint(mStartPoint);
         mRoadManager.SetEndPoint(mEndPoint);
 
-        ArrayList<Point3d> way = mRoadManager.GetRoad().getPointList();
+        Point3dList road = mRoadManager.GetRoad();
+        ArrayList<Point3d> way = road.getPointList();
         if (way.isEmpty()) {
             return false;
         }
@@ -270,6 +279,10 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         // create start & end point overlay.
         mStartOverlay = createMarkerOverlay2(mStartPoint, R.drawable.start);
         mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
+
+        // refresh info panel.
+        mRoutingInfo.setText("Room: " + mStartRoom + "\nDistance: " + (int)road.GetLength_GeoCoord() + "m away!");
+        mRoutingInfoLayout.setVisibility(View.VISIBLE);
 
         return true;
     }
@@ -353,16 +366,18 @@ public class MapActivity extends Activity implements MapEventsReceiver {
             }
 
             EditText text = (EditText)findViewById(R.id.searchText);
-            String roomText = text.getText().toString();
+            mStartRoom = text.getText().toString();
 
-            if (getRoomLocation(Integer.parseInt(roomText), mEndPoint)) {
+            if (getRoomLocation(Integer.parseInt(mStartRoom), mEndPoint)) {
                 mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
+                mapView.getController().setCenter(new GeoPoint(mEndPoint.Lat(), mEndPoint.Lon()));
+                mapView.getController().setZoom(20);
 
-                mEndInfo.setText("Target: " + roomText);
+                mEndInfo.setText("Target: " + mStartRoom);
                 mNavInfoLayout.setVisibility(View.VISIBLE);
             }
             else {
-                Toast.makeText(getApplicationContext(), "Room #" + roomText + "# NOT FOUND!",
+                Toast.makeText(getApplicationContext(), "Room #" + mStartRoom + "# NOT FOUND!",
                         Toast.LENGTH_LONG).show();
             }
         }
@@ -381,13 +396,15 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     public void onBackPressed() {
         // just chose the destination point.
         if (mNavInfoLayout.getVisibility() == View.VISIBLE) {
-            hideNavInfoLayout();
+            mNavInfoLayout.setVisibility(View.INVISIBLE);
 
             removeOverlay(mEndOverlay);
             mEndOverlay = null;
         }
         // showing the route.
-        else if (null != mWayOverlay) {
+        else if (mRoutingInfoLayout.getVisibility() == View.VISIBLE) {
+            mRoutingInfoLayout.setVisibility(View.INVISIBLE);
+
             removeOverlay(mWayOverlay);
             mWayOverlay = null;
 

@@ -47,7 +47,8 @@
         android:layout_centerHorizontal="true"
         android:weightSum="1"
         android:background="#c4f4f4f4"
-        android:id="@+id/navInfoLayout">
+        android:id="@+id/navInfoLayout"
+        android:visibility="invisible">
 
         <TextView
             android:layout_width="173dp"
@@ -69,6 +70,23 @@
             android:text="GO!"
             android:id="@+id/navButton"
             android:layout_gravity="right" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="0.25"
+        android:layout_alignParentBottom="true"
+        android:background="#dddddd"
+        android:id="@+id/routingInfoLayout">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="59dp"
+            android:text="New Text"
+            android:id="@+id/routingInfoText"
+            android:textSize="18dp" />
     </LinearLayout>
 
 </RelativeLayout>
