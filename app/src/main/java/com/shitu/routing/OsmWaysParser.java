@@ -17,11 +17,13 @@ public class OsmWaysParser {
     private ArrayList<SimpleEdge3d> mEdgeList;
 
     private class Node{
+        public long id;
+        public Point2d pt;
+
         public Node() {
             id = 0;
+            pt = new Point2d();
         }
-        public int id;
-        public Point2d pt;
 
         public boolean equals(Object o) {
             if (o instanceof Node) {
@@ -37,11 +39,14 @@ public class OsmWaysParser {
     }
 
     private class Way{
+        public long id;
+        public ArrayList nds;
+        public String tag;
+
         public Way() {
             id = 0;
+            nds = new ArrayList<>();
         }
-        public int id;
-        public ArrayList nds;
     }
 
     public OsmWaysParser(String path){
@@ -76,24 +81,30 @@ public class OsmWaysParser {
                     case XmlPullParser.START_DOCUMENT:// 文档开始事件,可以进行数据初始化处理
                         edges = new ArrayList<>();// 实例化集合类
                         nodes = new ArrayList<>();
-                        currentNode = new Node();
                         break;
                     case XmlPullParser.START_TAG://开始读取某个标签
                         //通过getName判断读到哪个标签，然后通过nextText()获取文本节点值，或通过getAttributeValue(i)获取属性节点值
                         String name = parser.getName();
                         if (name.equalsIgnoreCase("node")) {
-                            currentNode.id = Integer.parseInt(parser.getAttributeValue(null, "id"));
-                            currentNode.pt.x = Double.parseDouble(parser.getAttributeValue(null, "lat"));
-                            currentNode.pt.y = Double.parseDouble(parser.getAttributeValue(null, "lon"));
+                            assert currentNode == null;
+                            currentNode = new Node();
+                            currentNode.id = Long.parseLong(parser.getAttributeValue(null, "id"));
+                            String value = parser.getAttributeValue(null, "lat");
+                            currentNode.pt.x = Double.parseDouble(value);
+                            value = parser.getAttributeValue(null, "lon");
+                            currentNode.pt.y = Double.parseDouble(value);
                         }
                         else if (name.equalsIgnoreCase("way")) {
                             currentWay = new Way();
-                            currentWay.id = Integer.parseInt(parser.getAttributeValue(null, "id"));
+                            currentWay.id = Long.parseLong(parser.getAttributeValue(null, "id"));
                         }
                         else if (currentWay != null) {
                             if (name.equalsIgnoreCase("nd")) {
-                                int ref_id = Integer.parseInt(parser.getAttributeValue(null, "ref"));
+                                long ref_id = Long.parseLong(parser.getAttributeValue(null, "ref"));
                                 currentWay.nds.add(ref_id);
+                            }
+                            else if (name.equalsIgnoreCase("tag")) {
+                                currentWay.tag = parser.getAttributeValue(null, "v");
                             }
                         }
                         break;
@@ -103,26 +114,32 @@ public class OsmWaysParser {
                             currentNode = null;
                         }
                         else if (parser.getName().equalsIgnoreCase("way") && currentWay != null) {
-                            for (int i = 1; i < currentWay.nds.size(); i++) {
-                                int start_node_id = Integer.parseInt(currentWay.nds.get(i-1).toString());
-                                int end_node_id = Integer.parseInt(currentWay.nds.get(i).toString());
+                            if (currentWay.tag != null && currentWay.tag.equalsIgnoreCase("footway")) {
+                                for (int i = 1; i < currentWay.nds.size(); i++) {
+                                    long start_node_id = Long.parseLong(currentWay.nds.get(i - 1).toString());
+                                    long end_node_id = Long.parseLong(currentWay.nds.get(i).toString());
 
-                                Point2d start = null;
-                                Point2d end = null;
-                                for (Node node: nodes) {
-                                    if (node.id == start_node_id) {
-                                        start = node.pt;
-                                    }
-                                    else if (node.id == end_node_id) {
-                                        end = node.pt;
-                                    }
-                                }
+                                    Point2d start = null;
+                                    Point2d end = null;
+                                    for (Node node: nodes) {
+                                        if (start == null && node.id == start_node_id) {
+                                            start = node.pt;
+                                        }
+                                        else if (end == null && node.id == end_node_id) {
+                                            end = node.pt;
+                                        }
 
-                                if (start != null && end != null) {
-                                    Point3d startPt = new Point3d(start.x, start.y, 3);
-                                    Point3d endPt = new Point3d(end.x, end.y, 3);
-                                    SimpleEdge3d edge = new SimpleEdge3d(startPt, endPt);
-                                    edges.add(edge);
+                                        if (start != null && end != null) {
+                                            break;
+                                        }
+                                    }
+
+                                    if (start != null && end != null) {
+                                        Point3d startPt = new Point3d(start.x, start.y, 3);
+                                        Point3d endPt = new Point3d(end.x, end.y, 3);
+                                        SimpleEdge3d edge = new SimpleEdge3d(startPt, endPt);
+                                        edges.add(edge);
+                                    }
                                 }
                             }
                             currentWay = null;
