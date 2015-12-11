@@ -1,6 +1,7 @@
 package com.shitu.routing;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Created by DongliangLyu on 2015/12/3.
@@ -38,7 +39,7 @@ public class RoadManager  {
     {
         RefreshTime();
         CalcReachingTime();
-        return CalcShortestPathFromStartPt();
+        return CalcShortestPath();
     }
 
     //Refresh node time
@@ -257,37 +258,10 @@ public class RoadManager  {
 
         }
 
+        Collections.reverse(ptList);
         //返回最短路上的点序列
         return ptList;
     }
 
-    private ArrayList<Point3d> CalcShortestPathFromStartPt()
-    {
-        NodePoint3d currentNode = startNode;
-        ArrayList<Point3d> ptList = new ArrayList<Point3d>(100);
-        ptList.add(currentNode.pt);
-
-        int k = 0;
-        while (currentNode.time < endNode.time - 0.1 && k < nodePts.size())
-        {
-            for (int i = 0; i < currentNode.edgeIndex.size(); ++i)
-            {
-                int dualNodeIndex = (int)currentNode.dualNodeIndex.get(i);
-                int edgeIndex = (int)currentNode.edgeIndex.get(i);
-                NodePoint3d nextNode = nodePts.get(dualNodeIndex);
-                double nextNodeT = currentNode.time + edgeList.get(edgeIndex).time;
-                if (Math.abs(nextNodeT - nextNode.time) < 1.0)
-                {
-                    ptList.add(nextNode.pt);
-                    currentNode = nextNode;
-                    break;
-                }
-            }
-
-        }
-
-        //返回最短路上的点序列
-        return ptList;
-    }
 
 }
