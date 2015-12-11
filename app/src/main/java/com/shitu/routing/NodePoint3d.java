@@ -24,4 +24,20 @@ public class NodePoint3d {
         pt = pt0;
         index = index0;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        NodePoint3d pt = (NodePoint3d)o;
+        if (null != pt) {
+            return this.index == pt.index;
+        }
+        else {
+            return false;
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return this.index;
+    }
 }
