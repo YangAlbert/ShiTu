@@ -22,6 +22,7 @@ import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.overlays.MapEventsReceiver;
+import org.osmdroid.bonuspack.overlays.Marker;
 import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.events.MapListener;
 import org.osmdroid.events.ScrollEvent;
@@ -52,12 +53,12 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     org.osmdroid.bonuspack.overlays.Polyline mRoadLay = null;
 
     // routing module.
-    com.shitu.routing.RoadManager mRoadManager = null;
+    static com.shitu.routing.RoadManager mRoadManager = null;
 
     org.osmdroid.views.overlay.Overlay mStartOverlay = null;
-    Point3d mStartPoint = new Point3d();
+    static Point3d mStartPoint = new Point3d();
     org.osmdroid.views.overlay.Overlay mEndOverlay = null;
-    Point3d mEndPoint = new Point3d();
+    static Point3d mEndPoint = new Point3d();
 
     org.osmdroid.views.overlay.Overlay mWayOverlay = null;
 
@@ -80,7 +81,9 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
         initMapResource();
 
-        initRoadManager();
+        if (null == mRoadManager) {
+            initRoadManager();
+        }
 //        testRouting();
 
         tryStartRoutingFromIntent();
@@ -146,11 +149,27 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     }
 
     private void initRoadManager() {
-        String fileName = "osmdroid/Glodon_Outdoor.osm";// test.
-        String path = Environment.getExternalStorageDirectory() + "/" + fileName;
-        OsmWaysParser ways_parser = new OsmWaysParser(path);
-        ArrayList<SimpleEdge3d> edgeList = ways_parser.GetRawWays();
-        assert edgeList != null;
+//        String fileName = "osmdroid/Glodon_Outdoor.osm";// test.
+//        String path = Environment.getExternalStorageDirectory() + "/" + fileName;
+//        OsmWaysParser ways_parser = new OsmWaysParser(path);
+//        ArrayList<SimpleEdge3d> edgeList = ways_parser.GetRawWays();
+//        assert edgeList != null;
+
+        Point3d p0 = new Point3d(40.0441536550435, 116.276926688662, 6);
+        Point3d p1 = new Point3d(40.0440538156341, 116.276939109173, 6);
+        Point3d p2 = new Point3d(40.0442427972498, 116.277682787277, 6);
+        Point3d p3 = new Point3d(40.0449381024586, 116.276785405348, 6);
+        Point3d p4 = new Point3d(40.0450153581401, 116.277536846271, 6);
+        Point3d p5 = new Point3d(40.0445884546477, 116.277198053464, 6);
+
+        ArrayList<SimpleEdge3d> edgeList = new ArrayList<>();
+        edgeList.add(new SimpleEdge3d(p0, p1));
+        edgeList.add(new SimpleEdge3d(p0, p2));
+        edgeList.add(new SimpleEdge3d(p0, p3));
+        edgeList.add(new SimpleEdge3d(p3, p4));
+        edgeList.add(new SimpleEdge3d(p0, p5));
+        edgeList.add(new SimpleEdge3d(p3, p5));
+        edgeList.add(new SimpleEdge3d(p2, p4));
 
         mRoadManager = new com.shitu.routing.RoadManager(edgeList);
     }
@@ -249,8 +268,8 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mWayOverlay = wayOverlay;
 
         // create start & end point overlay.
-        mStartOverlay = createMarkerOverlay(mStartPoint, R.drawable.start);
-        mEndOverlay = createMarkerOverlay(mEndPoint, R.drawable.dest);
+        mStartOverlay = createMarkerOverlay2(mStartPoint, R.drawable.start);
+        mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
 
         return true;
     }
@@ -260,40 +279,57 @@ public class MapActivity extends Activity implements MapEventsReceiver {
             roomCoord.setValue(40.0443256069883, 116.277749070418, 6);
             return  true;
         }
+        else  if (roomId == 631) {
+            roomCoord.setValue(40.0446795680168, 116.276742256975, 6);
+            return true;
+        }
         else {
             return false;
         }
     }
 
-    ItemizedIconOverlay<OverlayItem> createMarkerOverlay(Point3d pos, int markerId) {
-        GeoPoint geoPt = new GeoPoint(pos.Lat(), pos.Lon());
-        OverlayItem item = new OverlayItem("Marker", "it's a marker", geoPt);
-
-        Drawable marker = getResources().getDrawable(markerId);
-        item.setMarker(marker);
-
-        ArrayList<OverlayItem> itemArray = new ArrayList<>();
-        itemArray.add(item);
-
-        final ResourceProxy resProxy = new DefaultResourceProxyImpl(getApplicationContext());
-        ItemizedIconOverlay<OverlayItem> iconOverlay = new ItemizedIconOverlay<OverlayItem>(itemArray,
-                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
-                    public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-                        return true;
-                    }
-                    public boolean onItemLongPress(final int index, final OverlayItem item) {
-                        return true;
-                    }
-                }, resProxy);
-        mapView.getOverlays().add(iconOverlay);
-
-        mapView.getController().setZoom(20);
-        mapView.getController().setCenter(geoPt);
-
+    org.osmdroid.views.overlay.Overlay createMarkerOverlay2(Point3d pos, int markerId) {
+        Marker marker = new Marker(mapView);
+        marker.setPosition(new GeoPoint(pos.Lat(), pos.Lon()));
+        marker.setIcon(getResources().getDrawable(markerId));
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+        marker.setTitle("Point Marker");
+        marker.setDraggable(false);
+        mapView.getOverlays().add(marker);
         mapView.invalidate();
 
-        return iconOverlay;
+        return marker;
     }
+
+//    ItemizedIconOverlay<OverlayItem> createMarkerOverlay(Point3d pos, int markerId) {
+//        GeoPoint geoPt = new GeoPoint(pos.Lat(), pos.Lon());
+//        OverlayItem item = new OverlayItem("Marker", "it's a marker", geoPt);
+//
+//        Drawable marker = getResources().getDrawable(markerId);
+//        item.setMarker(marker);
+//
+//        ArrayList<OverlayItem> itemArray = new ArrayList<>();
+//        itemArray.add(item);
+//
+//        final ResourceProxy resProxy = new DefaultResourceProxyImpl(getApplicationContext());
+//        ItemizedIconOverlay<OverlayItem> iconOverlay = new ItemizedIconOverlay<OverlayItem>(itemArray,
+//                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+//                    public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
+//                        return true;
+//                    }
+//                    public boolean onItemLongPress(final int index, final OverlayItem item) {
+//                        return true;
+//                    }
+//                }, resProxy);
+//        mapView.getOverlays().add(iconOverlay);
+//
+//        mapView.getController().setZoom(20);
+//        mapView.getController().setCenter(geoPt);
+//
+//        mapView.invalidate();
+//
+//        return iconOverlay;
+//    }
 
     void removeOverlay(org.osmdroid.views.overlay.Overlay overlay) {
         mapView.getOverlays().remove(overlay);
@@ -320,7 +356,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
             String roomText = text.getText().toString();
 
             if (getRoomLocation(Integer.parseInt(roomText), mEndPoint)) {
-                mEndOverlay = createMarkerOverlay(mEndPoint, R.drawable.dest);
+                mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
 
                 mEndInfo.setText("Target: " + roomText);
                 mNavInfoLayout.setVisibility(View.VISIBLE);
@@ -337,6 +373,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         public void onClick(View v) {
             Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
             startActivity(intent);
+            finish();
         }
     };
 
