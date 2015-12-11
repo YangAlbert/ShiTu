@@ -161,10 +161,9 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mRoadManager.SetStartPoint(startPt);
         mRoadManager.SetEndPoint(endPt);
 
-        ArrayList<Point3d> way = mRoadManager.GetRoad();
+        ArrayList<Point3d> way = mRoadManager.GetRoad().getPointList();
 
-        ProjectPoint projectPt = new ProjectPoint();
-        projectPt.SetOriginPt(startPt);
+        ProjectPoint projectPt = new ProjectPoint(startPt);
         Point3d projectEndPt = projectPt.GetProjectivePoint(endPt);
 
         ArrayList<GeoPoint> ptArray = new ArrayList<>();
@@ -223,7 +222,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mRoadManager.SetStartPoint(mStartPoint);
         mRoadManager.SetEndPoint(mEndPoint);
 
-        ArrayList<Point3d> way = mRoadManager.GetRoad();
+        ArrayList<Point3d> way = mRoadManager.GetRoad().getPointList();
         if (way.isEmpty()) {
             return false;
         }

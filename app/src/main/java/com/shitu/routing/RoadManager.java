@@ -35,11 +35,11 @@ public class RoadManager  {
         endNode = GetNearestNode(endPt);
     }
 
-    public ArrayList<Point3d> GetRoad()
+    public Point3dList GetRoad()
     {
         RefreshTime();
         CalcReachingTime();
-        return CalcShortestPath();
+        return new Point3dList(CalcShortestPath());
     }
 
     //Refresh node time
