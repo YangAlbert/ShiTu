@@ -25,6 +25,10 @@ public class RoadManager  {
         nodePts = GetNodePoints();
     }
 
+    public ArrayList<Edge3d> getEdgeList() {
+        return edgeList;
+    }
+
     public void SetStartPoint(Point3d startPt0)
     {
         startPt = startPt0;
