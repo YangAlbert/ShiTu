@@ -174,9 +174,11 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
 
     @Override
     public void orientation(Double AZIMUTH, Double PITCH, Double ROLL) {
+/*
         Log.d("Azimuth", String.valueOf(AZIMUTH));
         Log.d("Pitch", String.valueOf(PITCH));
         Log.d("Roll", String.valueOf(ROLL));
+*/
     }
 
     private void updateNativeDisplayParameters()

@@ -1,10 +1,80 @@
-2
+11
 
 ../OSG/axes.osg
 0.0 0.0 0.0
 0.0 1.0 0.0 0.0
 40.0 40.0 40.0
 MARKER 1
+LIGHTING 0
+
+../OSG/axes.osg
+0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+40.0 40.0 40.0
+MARKER 2
+LIGHTING 0
+
+../OSG/axes.osg
+0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+40.0 40.0 40.0
+MARKER 3
+LIGHTING 0
+
+../OSG/axes.osg
+0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+40.0 40.0 40.0
+MARKER 4
+LIGHTING 0
+
+../OSG/axes.osg
+0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+40.0 40.0 40.0
+MARKER 5
+LIGHTING 0
+
+../OSG/axes.osg
+0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+40.0 40.0 40.0
+MARKER 6
+LIGHTING 0
+
+../OSG/axes.osg
+0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+40.0 40.0 40.0
+MARKER 7
+LIGHTING 0
+
+../OSG/axes.osg
+0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+40.0 40.0 40.0
+MARKER 8
+LIGHTING 0
+
+../OSG/axes.osg
+0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+40.0 40.0 40.0
+MARKER 9
+LIGHTING 0
+
+../OSG/axes.osg
+0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+40.0 40.0 40.0
+MARKER 10
+LIGHTING 0
+
+../OSG/axes.osg
+0.0 0.0 0.0
+0.0 1.0 0.0 0.0
+40.0 40.0 40.0
+MARKER 11
 LIGHTING 0
 
 ../OSG/p51d-jw-animated.osg
