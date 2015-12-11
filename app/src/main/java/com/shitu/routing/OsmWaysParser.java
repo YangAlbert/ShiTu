@@ -15,14 +15,17 @@ import android.util.Xml;
 public class OsmWaysParser {
     private String mPath;
     private ArrayList<SimpleEdge3d> mEdgeList;
+    private ArrayList<Room> mRoomList;
 
-    private class Node{
+    private class Node {
         public long id;
         public Point2d pt;
+        public boolean isDoor;// 是否为门
 
         public Node() {
             id = 0;
             pt = new Point2d();
+            isDoor = false;
         }
 
         public boolean equals(Object o) {
@@ -38,10 +41,11 @@ public class OsmWaysParser {
         }
     }
 
-    private class Way{
+    private class Way {
         public long id;
         public ArrayList nds;
-        public String tag;
+        public String key;
+        public String value;
 
         public Way() {
             id = 0;
@@ -49,37 +53,48 @@ public class OsmWaysParser {
         }
     }
 
-    public OsmWaysParser(String path){
+    public OsmWaysParser(String path) {
         mPath = path;
-    }
 
-    // 得到原始的路径信息
-    public ArrayList<SimpleEdge3d> GetRawWays(){
         File xmlFile = new File(mPath);
         try {
             FileInputStream inputStream = new FileInputStream(xmlFile);
-            mEdgeList = ReadOSM(inputStream);
+            ReadOSM(inputStream);
             inputStream.close();
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    // 得到原始的路径信息
+    public ArrayList<SimpleEdge3d> GetRawWays() {
+        if (mEdgeList == null) {
+            mEdgeList = new ArrayList<>();
+        }
         return mEdgeList;
     }
 
-    private ArrayList<SimpleEdge3d> ReadOSM(InputStream inStream) {
+    public ArrayList<Room> GetRawRooms() {
+        if (mRoomList == null) {
+            mRoomList = new ArrayList<>();
+        }
+        return mRoomList;
+    }
+
+    private boolean ReadOSM(InputStream inStream) {
         XmlPullParser parser = Xml.newPullParser();
         try {
             parser.setInput(inStream, "UTF-8");// 设置数据源编码
             int eventType = parser.getEventType();// 获取事件类型
             Node currentNode = null;
             Way currentWay = null;
-            ArrayList<SimpleEdge3d> edges = null;
             ArrayList<Node> nodes = null;
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 switch (eventType) {
                     case XmlPullParser.START_DOCUMENT:// 文档开始事件,可以进行数据初始化处理
-                        edges = new ArrayList<>();// 实例化集合类
+                        mEdgeList = new ArrayList<>();// 实例化集合类
+                        mRoomList = new ArrayList<>();// 实例化集合类
                         nodes = new ArrayList<>();
                         break;
                     case XmlPullParser.START_TAG://开始读取某个标签
@@ -104,7 +119,23 @@ public class OsmWaysParser {
                                 currentWay.nds.add(ref_id);
                             }
                             else if (name.equalsIgnoreCase("tag")) {
-                                currentWay.tag = parser.getAttributeValue(null, "v");
+                                String key = parser.getAttributeValue(null, "k");
+                                // 只关心这两个 tag
+                                if (key.equalsIgnoreCase("highway") || key.equalsIgnoreCase("office")) {
+                                    currentWay.key = key;
+                                    currentWay.value = parser.getAttributeValue(null, "v");
+                                }
+                            }
+                        }
+                        else if (currentNode != null) {
+                            if (name.equalsIgnoreCase("tag")) {
+                                String key = parser.getAttributeValue(null, "k");
+                                if (key != null && key.equalsIgnoreCase("type")) {
+                                    String value = parser.getAttributeValue(null, "v");
+                                    if (value != null && value.equalsIgnoreCase("door")) {
+                                        currentNode.isDoor = true;
+                                    }
+                                }
                             }
                         }
                         break;
@@ -114,31 +145,74 @@ public class OsmWaysParser {
                             currentNode = null;
                         }
                         else if (parser.getName().equalsIgnoreCase("way") && currentWay != null) {
-                            if (currentWay.tag != null && currentWay.tag.equalsIgnoreCase("footway")) {
-                                for (int i = 1; i < currentWay.nds.size(); i++) {
-                                    long start_node_id = Long.parseLong(currentWay.nds.get(i - 1).toString());
-                                    long end_node_id = Long.parseLong(currentWay.nds.get(i).toString());
+                            if (currentWay.key != null && currentWay.value != null) {
+                                if (currentWay.key.equalsIgnoreCase("highway") &&
+                                        currentWay.value.equalsIgnoreCase("footway")) {
+                                    for (int i = 1; i < currentWay.nds.size(); i++) {
+                                        long start_node_id = Long.parseLong(currentWay.nds.get(i - 1).toString());
+                                        long end_node_id = Long.parseLong(currentWay.nds.get(i).toString());
 
-                                    Point2d start = null;
-                                    Point2d end = null;
-                                    for (Node node: nodes) {
-                                        if (start == null && node.id == start_node_id) {
-                                            start = node.pt;
-                                        }
-                                        else if (end == null && node.id == end_node_id) {
-                                            end = node.pt;
+                                        Point2d start = null;
+                                        Point2d end = null;
+                                        for (Node node: nodes) {
+                                            if (start == null && node.id == start_node_id) {
+                                                start = node.pt;
+                                            }
+                                            else if (end == null && node.id == end_node_id) {
+                                                end = node.pt;
+                                            }
+
+                                            if (start != null && end != null) {
+                                                break;
+                                            }
                                         }
 
                                         if (start != null && end != null) {
-                                            break;
+                                            Point3d startPt = new Point3d(start.x, start.y, 3);
+                                            Point3d endPt = new Point3d(end.x, end.y, 3);
+                                            SimpleEdge3d edge = new SimpleEdge3d(startPt, endPt);
+                                            mEdgeList.add(edge);
                                         }
                                     }
+                                }
+                                else if (currentWay.key.equalsIgnoreCase("office")) {
+                                    int size = currentWay.nds.size();
+                                    if (size > 0) {
+                                        Point3d door_pt = null;
+                                        Point3d first_pt = null;// 第一个点，容错用
 
-                                    if (start != null && end != null) {
-                                        Point3d startPt = new Point3d(start.x, start.y, 3);
-                                        Point3d endPt = new Point3d(end.x, end.y, 3);
-                                        SimpleEdge3d edge = new SimpleEdge3d(startPt, endPt);
-                                        edges.add(edge);
+                                        for (int i = 0; i < size; i++) {
+                                            long node_id = Long.parseLong(currentWay.nds.get(i).toString());
+                                            for (Node node: nodes) {
+                                                if (node.id == node_id) {
+                                                    if (first_pt == null) {
+                                                        first_pt = new Point3d();
+                                                        first_pt.x = node.pt.x;
+                                                        first_pt.y = node.pt.y;
+                                                    }
+
+                                                    if (node.isDoor) {
+                                                        door_pt = new Point3d();// 房间的门
+                                                        door_pt.x = node.pt.x;
+                                                        door_pt.y = node.pt.y;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+
+                                            if (door_pt != null) {
+                                                break;
+                                            }
+                                        }
+
+                                        if (door_pt == null) {
+                                            assert(first_pt != null);
+                                            door_pt = first_pt;
+                                        }
+
+                                        int number = Integer.parseInt(currentWay.value);
+                                        Room room = new Room(number, door_pt);
+                                        mRoomList.add(room);
                                     }
                                 }
                             }
@@ -150,12 +224,12 @@ public class OsmWaysParser {
             }
 
             inStream.close();
-            return edges;
+            return true;
         }
         catch (Exception e) {
             e.printStackTrace();
         }
 
-        return null;
+        return false;
     }
 }

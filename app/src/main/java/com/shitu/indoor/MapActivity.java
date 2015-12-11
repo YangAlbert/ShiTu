@@ -16,6 +16,7 @@ import android.widget.Toast;
 import com.shitu.routing.OsmWaysParser;
 import com.shitu.routing.Point3d;
 import com.shitu.routing.ProjectPoint;
+import com.shitu.routing.Room;
 import com.shitu.routing.SimpleEdge3d;
 
 import org.osmdroid.DefaultResourceProxyImpl;
@@ -151,8 +152,9 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         OsmWaysParser ways_parser = new OsmWaysParser(path);
         ArrayList<SimpleEdge3d> edgeList = ways_parser.GetRawWays();
         assert edgeList != null;
+        ArrayList<Room> roomList = ways_parser.GetRawRooms();
 
-        mRoadManager = new com.shitu.routing.RoadManager(edgeList);
+        mRoadManager = new com.shitu.routing.RoadManager(edgeList, roomList);
     }
 
     private void testRouting() {
