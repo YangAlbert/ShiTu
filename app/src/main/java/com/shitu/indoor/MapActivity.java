@@ -352,7 +352,7 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
                 mapView.getController().setCenter(new GeoPoint(mEndPoint.Lat(), mEndPoint.Lon()));
                 mapView.getController().setZoom(20);
 
-                mEndInfo.setText("Target: " + mStartRoom);
+                mEndInfo.setText("Room: " + mStartRoom);
                 mNavInfoLayout.setVisibility(View.VISIBLE);
             }
             else {
