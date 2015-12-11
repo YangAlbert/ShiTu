@@ -21,11 +21,13 @@ public class OsmWaysParser {
         public long id;
         public Point2d pt;
         public boolean isDoor;// 是否为门
+        public int angle;// 门的角度（正北为0°，顺时针）
 
         public Node() {
             id = 0;
             pt = new Point2d();
             isDoor = false;
+            angle = 0;
         }
 
         public boolean equals(Object o) {
@@ -130,10 +132,18 @@ public class OsmWaysParser {
                         else if (currentNode != null) {
                             if (name.equalsIgnoreCase("tag")) {
                                 String key = parser.getAttributeValue(null, "k");
-                                if (key != null && key.equalsIgnoreCase("type")) {
+                                if (key != null) {
                                     String value = parser.getAttributeValue(null, "v");
-                                    if (value != null && value.equalsIgnoreCase("door")) {
-                                        currentNode.isDoor = true;
+
+                                    if (key.equalsIgnoreCase("type")) {
+                                        if (value != null && value.equalsIgnoreCase("door")) {
+                                            currentNode.isDoor = true;
+                                        }
+                                    }
+                                    else if (key.equalsIgnoreCase("direction")) {
+                                        if (value != null) {
+                                            currentNode.angle = Integer.parseInt(value);
+                                        }
                                     }
                                 }
                             }
@@ -180,6 +190,7 @@ public class OsmWaysParser {
                                     if (size > 0) {
                                         Point3d door_pt = null;
                                         Point3d first_pt = null;// 第一个点，容错用
+                                        int angle = 0;
 
                                         for (int i = 0; i < size; i++) {
                                             long node_id = Long.parseLong(currentWay.nds.get(i).toString());
@@ -189,12 +200,14 @@ public class OsmWaysParser {
                                                         first_pt = new Point3d();
                                                         first_pt.x = node.pt.x;
                                                         first_pt.y = node.pt.y;
+                                                        angle = node.angle;
                                                     }
 
                                                     if (node.isDoor) {
                                                         door_pt = new Point3d();// 房间的门
                                                         door_pt.x = node.pt.x;
                                                         door_pt.y = node.pt.y;
+                                                        angle = node.angle;
                                                         break;
                                                     }
                                                 }
@@ -211,7 +224,7 @@ public class OsmWaysParser {
                                         }
 
                                         int number = Integer.parseInt(currentWay.value);
-                                        Room room = new Room(number, door_pt);
+                                        Room room = new Room(number, door_pt, angle);
                                         mRoomList.add(room);
                                     }
                                 }
