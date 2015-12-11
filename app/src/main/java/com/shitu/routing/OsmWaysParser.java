@@ -84,14 +84,9 @@ public class OsmWaysParser {
 
     // 得到原始的路径信息
     public ArrayList<SimpleEdge3d> GetRawWays() {
-        ArrayList<SimpleEdge3d> edgeList = null;
-        if (mEdgeList == null) {
-            edgeList = new ArrayList<>();
-        }
-        else {
-            for (int i = 0; i < mEdgeList.size(); ++i) {
-                edgeList.add(mEdgeList.get(i).edge);
-            }
+        ArrayList<SimpleEdge3d> edgeList = new ArrayList<>();
+        for (int i = 0; i < mEdgeList.size(); ++i) {
+            edgeList.add(mEdgeList.get(i).edge);
         }
         return edgeList;
     }
@@ -126,7 +121,9 @@ public class OsmWaysParser {
                 startNode.pt.y = startPt.y;
                 startNode.isDoor = false;
                 startNode.angle = 0;
-                nodes.add(startNode);
+                if (!nodes.contains(startNode)) {
+                    nodes.add(startNode);
+                }
 
                 Node endNode = new Node();
                 Point3d endPt = edge.edge.endPt;
@@ -135,7 +132,9 @@ public class OsmWaysParser {
                 endNode.pt.y = endPt.y;
                 endNode.isDoor = false;
                 endNode.angle = 0;
-                nodes.add(endNode);
+                if (!nodes.contains(endNode)) {
+                    nodes.add(endNode);
+                }
             }
             for (int i = 0; i < mRoomList.size(); i++) {
                 Room room = mRoomList.get(i);
@@ -147,7 +146,9 @@ public class OsmWaysParser {
                 node.pt.y = currentPt.y;
                 node.isDoor = true;
                 node.angle = room.angle;
-                nodes.add(node);
+                if (!nodes.contains(node)) {
+                    nodes.add(node);
+                }
             }
 
             // 写节点
@@ -161,12 +162,12 @@ public class OsmWaysParser {
 
                 if (node.isDoor) {
                     xmlSerializer.startTag("", "tag");
-                    xmlSerializer.attribute("", "key", "direction");
+                    xmlSerializer.attribute("", "k", "direction");
                     xmlSerializer.attribute("", "v", Integer.toString(node.angle));
                     xmlSerializer.endTag("", "tag");
 
                     xmlSerializer.startTag("", "tag");
-                    xmlSerializer.attribute("", "key", "type");
+                    xmlSerializer.attribute("", "k", "type");
                     xmlSerializer.attribute("", "v", "door");
                     xmlSerializer.endTag("", "tag");
                 }
@@ -189,7 +190,7 @@ public class OsmWaysParser {
                 xmlSerializer.endTag("", "nd");
 
                 xmlSerializer.startTag("", "tag");
-                xmlSerializer.attribute("", "key", "highway");
+                xmlSerializer.attribute("", "k", "highway");
                 xmlSerializer.attribute("", "v", "footway");
                 xmlSerializer.endTag("", "tag");
 
@@ -207,7 +208,7 @@ public class OsmWaysParser {
                 xmlSerializer.endTag("", "nd");
 
                 xmlSerializer.startTag("", "tag");
-                xmlSerializer.attribute("", "key", "office");
+                xmlSerializer.attribute("", "k", "office");
                 xmlSerializer.attribute("", "v", Integer.toString(room.number));
                 xmlSerializer.endTag("", "tag");
 
@@ -390,7 +391,7 @@ public class OsmWaysParser {
         return false;
     }
 
-    private boolean SavedXML(String fileName, String xml) {
+    private static boolean SavedXML(String fileName, String xml) {
         File xmlFile = new File(fileName);
         try {
             FileOutputStream outputStream = new FileOutputStream(xmlFile);
