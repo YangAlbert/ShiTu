@@ -4,9 +4,12 @@ import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
+import com.shitu.routing.Point2d;
 import com.shitu.routing.Point3d;
+import com.shitu.routing.ProjectPoint;
 import com.shitu.routing.SimpleEdge3d;
 
+import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.overlays.MapEventsReceiver;
@@ -64,41 +67,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mapView.setUseDataConnection(false);
         mapView.setMaxZoomLevel(21);
 
-        final ITileSource tileSource = new XYTileSource("GlodonMap", 15, 21, 256, ".png", null);
-        MapTileModuleProviderBase tileModuleProvider = new MapTileFileArchiveProvider(
-                new SimpleRegisterReceiver(getApplicationContext()),
-                tileSource, null);
-
-        MapTileProviderBase mapProvider = new MapTileProviderArray(tileSource, null,
-                new MapTileModuleProviderBase[] { tileModuleProvider });
-        final TilesOverlay tileOverlay = new TilesOverlay(mapProvider, getBaseContext());
-        mapView.getOverlays().add(tileOverlay);
-
-        class OverlayMapListener implements MapListener {
-            @Override
-            public boolean onScroll(ScrollEvent e) {
-                e.getSource().invalidate();
-
-                return true;
-            }
-
-            @Override
-            public boolean onZoom(ZoomEvent e) {
-//                e.getSource().invalidate();
-                mapView.invalidate();
-
-                return true;
-            }
-        }
-        mapView.setMapListener(new OverlayMapListener());
-
-        IMapController mapViewController = mapView.getController();
-        mapViewController.setZoom(15);
-        mapViewController.setCenter(GLODON);
-
-//        start = new GeoPoint(40.0443964, 116.2776609);
-//        end = new GeoPoint(40.0449063, 116.2768361);
-//        showRouting();
+        initMapResource();
 
         initRoadManager();
         testRouting();
@@ -145,6 +114,40 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         start = null;
     }
 
+    private void initMapResource() {
+        final ITileSource tileSource = new XYTileSource("GlodonMap", 15, 21, 256, ".png", null);
+        MapTileModuleProviderBase tileModuleProvider = new MapTileFileArchiveProvider(
+                new SimpleRegisterReceiver(getApplicationContext()),
+                tileSource, null);
+
+        MapTileProviderBase mapProvider = new MapTileProviderArray(tileSource, null,
+                new MapTileModuleProviderBase[] { tileModuleProvider });
+        final TilesOverlay tileOverlay = new TilesOverlay(mapProvider, getBaseContext());
+//        mapView.getOverlays().add(tileOverlay);
+
+        class OverlayMapListener implements MapListener {
+            @Override
+            public boolean onScroll(ScrollEvent e) {
+                e.getSource().invalidate();
+
+                return true;
+            }
+
+            @Override
+            public boolean onZoom(ZoomEvent e) {
+//                e.getSource().invalidate();
+                mapView.invalidate();
+
+                return true;
+            }
+        }
+        mapView.setMapListener(new OverlayMapListener());
+
+        IMapController mapViewController = mapView.getController();
+        mapViewController.setZoom(18);
+        mapViewController.setCenter(GLODON);
+    }
+
     private void initRoadManager() {
         ArrayList<SimpleEdge3d> edgeList = new ArrayList<>();
 //        Point3d p0 = new Point3d(40.0447171339482, 116.277488101602, 6);
@@ -160,12 +163,12 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 //        p1 = new Point3d(40.0450019453328, 116.276963342318, 6);
 //        edgeList.add(new SimpleEdge3d(p0, p1));
 
-        Point3d p0 = new Point3d(40.0441536550435, 116.276926688662, 6);
-        Point3d p1 = new Point3d(40.0440538156341, 116.276939109173, 6);
-        Point3d p2 = new Point3d(40.0442427972498, 116.277682787277, 6);
-        Point3d p3 = new Point3d(40.0449381024586, 116.276785405348, 6);
-        Point3d p4 = new Point3d(40.0450153581401, 116.277536846271, 6);
-        Point3d p5 = new Point3d(40.0445884546477, 116.277198053464, 6);
+        Point3d p0 = new Point3d(116.276926688662, 40.0441536550435, 6);
+        Point3d p1 = new Point3d(116.276939109173, 40.0440538156341, 6);
+        Point3d p2 = new Point3d(116.277682787277, 40.0442427972498, 6);
+        Point3d p3 = new Point3d(116.276785405348, 40.0449381024586, 6);
+        Point3d p4 = new Point3d(116.277536846271, 40.0450153581401, 6);
+        Point3d p5 = new Point3d(116.277198053464, 40.0445884546477, 6);
         edgeList.add(new SimpleEdge3d(p0, p1));
         edgeList.add(new SimpleEdge3d(p0, p2));
         edgeList.add(new SimpleEdge3d(p0, p3));
@@ -178,12 +181,16 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     }
 
     private void testRouting() {
-        Point3d startPt = new Point3d(40.0450098982271, 116.27752735798, 6);
-        Point3d endPt = new Point3d(40.0446070055428, 116.277199421868, 6);
+        Point3d startPt = new Point3d(116.27752735798, 40.0450098982271, 6);
+        Point3d endPt = new Point3d(116.277199421868, 40.0446070055428, 6);
         mRoadManager.SetStartPoint(startPt);
         mRoadManager.SetEndPoint(endPt);
 
         ArrayList<Point3d> way = mRoadManager.GetRoad();
+
+        ProjectPoint projectPt = new ProjectPoint();
+        projectPt.SetOriginPt(startPt);
+        Point3d projectEndPt = projectPt.GetProjectivePoint(endPt);
 
         ArrayList<GeoPoint> ptArray = new ArrayList<>();
         for (Point3d p : way) {
@@ -209,8 +216,16 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         itemArray.add(startItem);
         itemArray.add(endItem);
 
-        final ResourceProxy resProxy = new ResourceProxyImpl(getApplicationContext());
-        ItemizedIconOverlay<OverlayItem> itemOverlay = new ItemizedIconOverlay<OverlayItem>(itemArray, null, resProxy);
+        final ResourceProxy resProxy = new DefaultResourceProxyImpl(getApplicationContext());
+        ItemizedIconOverlay<OverlayItem> itemOverlay = new ItemizedIconOverlay<OverlayItem>(itemArray,
+                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+            public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
+                return true;
+            }
+            public boolean onItemLongPress(final int index, final OverlayItem item) {
+                return true;
+            }
+        }, resProxy);
 
         mapView.getOverlays().add(wayOverlay);
         mapView.getOverlays().add(itemOverlay);

@@ -1,6 +1,7 @@
 package com.shitu.routing;
 
 import java.util.ArrayList;
+import java.util.Collections;
 
 /**
  * Created by DongliangLyu on 2015/12/3.
@@ -257,8 +258,10 @@ public class RoadManager  {
 
         }
 
+        Collections.reverse(ptList);
         //返回最短路上的点序列
         return ptList;
     }
+
 
 }
