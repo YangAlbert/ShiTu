@@ -8,10 +8,10 @@ import java.util.ArrayList;
 /**
  * Created by DongliangLyu on 2015/12/8.
  */
-public class Road {
+public class Point3dList {
     ArrayList<Point3d> pts;
 
-    public Road(ArrayList<Point3d> inputPts)
+    public Point3dList(ArrayList<Point3d> inputPts)
     {
         pts = inputPts;
     }
@@ -42,7 +42,7 @@ public class Road {
         return length;
     }
 
-    //在欧氏坐标下计算路的起点方向
+    //传入欧氏坐标表示的路， 计算路的起点方向
     public Point2d GetDirection()
     {
         Point2d pt2d = new Point2d();
@@ -68,6 +68,47 @@ public class Road {
                     pt2d = nextDir;
                 }
             }
+        }
+
+        pt2d.Normalize();
+        return pt2d;
+    }
+
+    //传入经纬坐标表示的路, 计算路的起点方向
+    public Point2d GetDirection2()
+    {
+        Point2d pt2d = new Point2d();
+        if (pts.size() >= 2)
+        {
+            Point3d startPt = pts.get(0);
+            Point3d endPt = pts.get(1);
+
+            ProjectPoint projecter = new ProjectPoint(startPt);
+            Point3d projectStartPt = projecter.GetProjectivePoint(startPt);
+            Point3d projectEndPt = projecter.GetProjectivePoint(endPt);
+
+            pt2d = new Point2d(projectEndPt.x - projectStartPt.x, projectEndPt.y - projectStartPt.y);
+//            if (pts.size() == 2){
+//                Point3d endPt = pts.get(1);
+//                Point3d projectEndPt = projecter.GetProjectivePoint(endPt);
+//                pt2d = new Point2d(projectEndPt.x - projectStartPt.x, projectEndPt.y - projectStartPt.y);
+//            }
+//            else {
+//                Point3d middlePt = pts.get(1);
+//                Point3d projectMiddlePt = projecter.GetProjectivePoint(middlePt);
+//                Point3d endPt = pts.get(2);
+//                Point3d projectEndPt = projecter.GetProjectivePoint(endPt);
+//                Point2d firstDir = new Point2d(projectMiddlePt.x - projectStartPt.x, projectMiddlePt.y - projectStartPt.y);
+//                Point2d nextDir = new Point2d(projectEndPt.x - projectMiddlePt.x, projectEndPt.y - projectMiddlePt.y);
+//                firstDir.Normalize();
+//                nextDir.Normalize();
+//                if (firstDir.IsEqual(nextDir, 0.1)){
+//                    pt2d = firstDir;
+//                }
+//                else {
+//                    pt2d = nextDir;
+//                }
+//            }
         }
 
         pt2d.Normalize();

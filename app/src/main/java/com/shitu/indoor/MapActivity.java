@@ -1,19 +1,16 @@
 package com.shitu.indoor;
 
 import android.app.Activity;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import com.shitu.routing.Point2d;
 import com.shitu.routing.Point3d;
+import com.shitu.routing.Point3dList;
 import com.shitu.routing.ProjectPoint;
 import com.shitu.routing.SimpleEdge3d;
 
-import org.osmdroid.DefaultResourceProxyImpl;
-import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.overlays.MapEventsReceiver;
-import org.osmdroid.bonuspack.overlays.Polyline;
 import org.osmdroid.bonuspack.routing.OSRMRoadManager;
 import org.osmdroid.bonuspack.routing.Road;
 import org.osmdroid.bonuspack.routing.RoadManager;
@@ -22,21 +19,13 @@ import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.MapTileProviderBase;
-import org.osmdroid.tileprovider.MapTileProviderBasic;
-import org.osmdroid.tileprovider.modules.IArchiveFile;
-import org.osmdroid.tileprovider.modules.MBTilesFileArchive;
 import org.osmdroid.tileprovider.modules.MapTileFileArchiveProvider;
 import org.osmdroid.tileprovider.modules.MapTileModuleProviderBase;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
 import org.osmdroid.util.GeoPoint;
-import org.osmdroid.util.ResourceProxyImpl;
 import org.osmdroid.views.MapView;
-import org.osmdroid.views.overlay.ItemizedIconOverlay;
-import org.osmdroid.views.overlay.MinimapOverlay;
-import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.TilesOverlay;
 
 import java.util.ArrayList;
@@ -59,15 +48,15 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
-
-        mapView = (MapView) findViewById(R.id.mapview);
-        mapView.setClickable(true);
-        mapView.setBuiltInZoomControls(true);
-        mapView.setMultiTouchControls(true);
-        mapView.setUseDataConnection(false);
-        mapView.setMaxZoomLevel(21);
-
-        initMapResource();
+//
+//        mapView = (MapView) findViewById(R.id.mapview);
+//        mapView.setClickable(true);
+//        mapView.setBuiltInZoomControls(true);
+//        mapView.setMultiTouchControls(true);
+//        mapView.setUseDataConnection(false);
+//        mapView.setMaxZoomLevel(21);
+//
+//        initMapResource();
 
         initRoadManager();
         testRouting();
@@ -181,54 +170,70 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     }
 
     private void testRouting() {
+        Point3d p0 = new Point3d(116.276926688662, 40.0441536550435, 6);
+        Point3d p1 = new Point3d(116.276939109173, 40.0440538156341, 6);
+        Point3d p2 = new Point3d(116.277682787277, 40.0442427972498, 6);
+        Point3d p3 = new Point3d(116.276785405348, 40.0449381024586, 6);
+        Point3d p4 = new Point3d(116.277536846271, 40.0450153581401, 6);
+        Point3d p5 = new Point3d(116.277198053464, 40.0445884546477, 6);
+
         Point3d startPt = new Point3d(116.27752735798, 40.0450098982271, 6);
         Point3d endPt = new Point3d(116.277199421868, 40.0446070055428, 6);
         mRoadManager.SetStartPoint(startPt);
         mRoadManager.SetEndPoint(endPt);
 
-        ArrayList<Point3d> way = mRoadManager.GetRoad();
+        Point3dList road = mRoadManager.GetRoad();
+        double roadLength = road.GetLength2();
+        Point2d roadDir = road.GetDirection2();
 
-        ProjectPoint projectPt = new ProjectPoint();
-        projectPt.SetOriginPt(startPt);
-        Point3d projectEndPt = projectPt.GetProjectivePoint(endPt);
+        ProjectPoint projectPt = new ProjectPoint(p0);
+        Point3d projectStartPt = projectPt.GetProjectivePoint(p0);
+        Point3d projectEndPt = projectPt.GetProjectivePoint(p4);
+        Point3d projectP2 = projectPt.GetProjectivePoint(p2);
+
+        double dis11 = Math.sqrt(projectStartPt.SquareDistanceTo(projectEndPt));
+        double dis12 = Math.sqrt(p0.SquareDistanceTo2(p4));
+
+        double dis21 = Math.sqrt(projectStartPt.SquareDistanceTo(projectP2));
+        double dis22 = Math.sqrt(p0.SquareDistanceTo2(p2));
 
         ArrayList<GeoPoint> ptArray = new ArrayList<>();
-        for (Point3d p : way) {
-            ptArray.add(new GeoPoint(p.Lat(), p.Lon()));
-        }
+//        for (Point3d p : way) {
+//            ptArray.add(new GeoPoint(p.Lat(), p.Lon()));
+//        }
 
-        Polyline wayOverlay = new Polyline(this);
-        wayOverlay.setPoints(ptArray);
-        wayOverlay.setColor(0x0000ffff);
-        wayOverlay.setWidth(3.0f);
-
-        // start and end point overlay.
-
-        Drawable startMk = getResources().getDrawable(R.drawable.start);
-        OverlayItem startItem = new OverlayItem("StartPoint", "where you start", new GeoPoint(startPt.Lat(), startPt.Lon()));
-        startItem.setMarker(startMk);
-
-        Drawable endMk = getResources().getDrawable(R.drawable.dest);
-        OverlayItem endItem = new OverlayItem("DestinationPoint", "where you go", new GeoPoint(endPt.Lat(), endPt.Lon()));
-        endItem.setMarker(endMk);
-
-        ArrayList<OverlayItem> itemArray = new ArrayList<>();
-        itemArray.add(startItem);
-        itemArray.add(endItem);
-
-        final ResourceProxy resProxy = new DefaultResourceProxyImpl(getApplicationContext());
-        ItemizedIconOverlay<OverlayItem> itemOverlay = new ItemizedIconOverlay<OverlayItem>(itemArray,
-                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
-            public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-                return true;
-            }
-            public boolean onItemLongPress(final int index, final OverlayItem item) {
-                return true;
-            }
-        }, resProxy);
-
-        mapView.getOverlays().add(wayOverlay);
-        mapView.getOverlays().add(itemOverlay);
-        mapView.invalidate();
+//        Polyline wayOverlay = new Polyline(this);
+//        wayOverlay.setPoints(ptArray);
+//        wayOverlay.setColor(0x0000ffff);
+//        wayOverlay.setWidth(3.0f);
+//
+//        // start and end point overlay.
+//
+//        Drawable startMk = getResources().getDrawable(R.drawable.start);
+//        OverlayItem startItem = new OverlayItem("StartPoint", "where you start", new GeoPoint(startPt.Lat(), startPt.Lon()));
+//        startItem.setMarker(startMk);
+//
+//        Drawable endMk = getResources().getDrawable(R.drawable.dest);
+//        OverlayItem endItem = new OverlayItem("DestinationPoint", "where you go", new GeoPoint(endPt.Lat(), endPt.Lon()));
+//        endItem.setMarker(endMk);
+//
+//        ArrayList<OverlayItem> itemArray = new ArrayList<>();
+//        itemArray.add(startItem);
+//        itemArray.add(endItem);
+//
+//        final ResourceProxy resProxy = new DefaultResourceProxyImpl(getApplicationContext());
+//        ItemizedIconOverlay<OverlayItem> itemOverlay = new ItemizedIconOverlay<OverlayItem>(itemArray,
+//                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+//            public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
+//                return true;
+//            }
+//            public boolean onItemLongPress(final int index, final OverlayItem item) {
+//                return true;
+//            }
+//        }, resProxy);
+//
+//        mapView.getOverlays().add(wayOverlay);
+//        mapView.getOverlays().add(itemOverlay);
+//        mapView.invalidate();
     }
 }
