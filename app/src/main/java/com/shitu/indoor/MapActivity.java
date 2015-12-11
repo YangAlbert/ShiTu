@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
-import com.shitu.routing.Point2d;
 import com.shitu.routing.Point3d;
 import com.shitu.routing.ProjectPoint;
 import com.shitu.routing.SimpleEdge3d;
@@ -22,20 +21,14 @@ import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.MapTileProviderBase;
-import org.osmdroid.tileprovider.MapTileProviderBasic;
-import org.osmdroid.tileprovider.modules.IArchiveFile;
-import org.osmdroid.tileprovider.modules.MBTilesFileArchive;
 import org.osmdroid.tileprovider.modules.MapTileFileArchiveProvider;
 import org.osmdroid.tileprovider.modules.MapTileModuleProviderBase;
 import org.osmdroid.tileprovider.tilesource.ITileSource;
-import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.tileprovider.tilesource.XYTileSource;
 import org.osmdroid.tileprovider.util.SimpleRegisterReceiver;
 import org.osmdroid.util.GeoPoint;
-import org.osmdroid.util.ResourceProxyImpl;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
-import org.osmdroid.views.overlay.MinimapOverlay;
 import org.osmdroid.views.overlay.OverlayItem;
 import org.osmdroid.views.overlay.TilesOverlay;
 
@@ -70,7 +63,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         initMapResource();
 
         initRoadManager();
-        testRouting();
+//        testRouting();
     }
 
     @Override
@@ -123,7 +116,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         MapTileProviderBase mapProvider = new MapTileProviderArray(tileSource, null,
                 new MapTileModuleProviderBase[] { tileModuleProvider });
         final TilesOverlay tileOverlay = new TilesOverlay(mapProvider, getBaseContext());
-//        mapView.getOverlays().add(tileOverlay);
+        mapView.getOverlays().add(tileOverlay);
 
         class OverlayMapListener implements MapListener {
             @Override
@@ -163,12 +156,12 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 //        p1 = new Point3d(40.0450019453328, 116.276963342318, 6);
 //        edgeList.add(new SimpleEdge3d(p0, p1));
 
-        Point3d p0 = new Point3d(116.276926688662, 40.0441536550435, 6);
-        Point3d p1 = new Point3d(116.276939109173, 40.0440538156341, 6);
-        Point3d p2 = new Point3d(116.277682787277, 40.0442427972498, 6);
-        Point3d p3 = new Point3d(116.276785405348, 40.0449381024586, 6);
-        Point3d p4 = new Point3d(116.277536846271, 40.0450153581401, 6);
-        Point3d p5 = new Point3d(116.277198053464, 40.0445884546477, 6);
+        Point3d p0 = new Point3d(40.0441536550435, 116.276926688662, 6);
+        Point3d p1 = new Point3d(40.0440538156341, 116.276939109173, 6);
+        Point3d p2 = new Point3d(40.0442427972498, 116.277682787277, 6);
+        Point3d p3 = new Point3d(40.0449381024586, 116.276785405348, 6);
+        Point3d p4 = new Point3d(40.0450153581401, 116.277536846271, 6);
+        Point3d p5 = new Point3d(40.0445884546477, 116.277198053464, 6);
         edgeList.add(new SimpleEdge3d(p0, p1));
         edgeList.add(new SimpleEdge3d(p0, p2));
         edgeList.add(new SimpleEdge3d(p0, p3));
@@ -181,8 +174,8 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     }
 
     private void testRouting() {
-        Point3d startPt = new Point3d(116.27752735798, 40.0450098982271, 6);
-        Point3d endPt = new Point3d(116.277199421868, 40.0446070055428, 6);
+        Point3d startPt = new Point3d(40.0450098982271, 116.27752735798, 6);
+        Point3d endPt = new Point3d(40.0446070055428, 116.277199421868, 6);
         mRoadManager.SetStartPoint(startPt);
         mRoadManager.SetEndPoint(endPt);
 
@@ -193,13 +186,15 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         Point3d projectEndPt = projectPt.GetProjectivePoint(endPt);
 
         ArrayList<GeoPoint> ptArray = new ArrayList<>();
+        ptArray.add(new GeoPoint(startPt.Lat(), startPt.Lon()));
         for (Point3d p : way) {
             ptArray.add(new GeoPoint(p.Lat(), p.Lon()));
         }
+        ptArray.add(new GeoPoint(endPt.Lat(), endPt.Lon()));
 
         Polyline wayOverlay = new Polyline(this);
         wayOverlay.setPoints(ptArray);
-        wayOverlay.setColor(0x0000ffff);
+        wayOverlay.setColor(0xff0000fb);
         wayOverlay.setWidth(3.0f);
 
         // start and end point overlay.
