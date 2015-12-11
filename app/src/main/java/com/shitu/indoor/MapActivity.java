@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -12,9 +13,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.shitu.routing.OsmWaysParser;
 import com.shitu.routing.Point3d;
 import com.shitu.routing.Point3dList;
 import com.shitu.routing.ProjectPoint;
+import com.shitu.routing.Room;
 import com.shitu.routing.SimpleEdge3d;
 
 import org.osmdroid.DefaultResourceProxyImpl;
@@ -162,29 +165,14 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
     }
 
     private void initRoadManager() {
-//        String fileName = "osmdroid/Glodon_Outdoor.osm";// test.
-//        String path = Environment.getExternalStorageDirectory() + "/" + fileName;
-//        OsmWaysParser ways_parser = new OsmWaysParser(path);
-//        ArrayList<SimpleEdge3d> edgeList = ways_parser.GetRawWays();
-//        assert edgeList != null;
+        String fileName = "osmdroid/Glodon_Outdoor.osm";// test.
+        String path = Environment.getExternalStorageDirectory() + "/" + fileName;
+        OsmWaysParser ways_parser = new OsmWaysParser(path);
+        ArrayList<SimpleEdge3d> edgeList = ways_parser.GetRawWays();
+        assert edgeList != null;
+        ArrayList<Room> roomList = ways_parser.GetRawRooms();
 
-        Point3d p0 = new Point3d(40.0441536550435, 116.276926688662, 6);
-        Point3d p1 = new Point3d(40.0440538156341, 116.276939109173, 6);
-        Point3d p2 = new Point3d(40.0442427972498, 116.277682787277, 6);
-        Point3d p3 = new Point3d(40.0449381024586, 116.276785405348, 6);
-        Point3d p4 = new Point3d(40.0450153581401, 116.277536846271, 6);
-        Point3d p5 = new Point3d(40.0445884546477, 116.277198053464, 6);
-
-        ArrayList<SimpleEdge3d> edgeList = new ArrayList<>();
-        edgeList.add(new SimpleEdge3d(p0, p1));
-        edgeList.add(new SimpleEdge3d(p0, p2));
-        edgeList.add(new SimpleEdge3d(p0, p3));
-        edgeList.add(new SimpleEdge3d(p3, p4));
-        edgeList.add(new SimpleEdge3d(p0, p5));
-        edgeList.add(new SimpleEdge3d(p3, p5));
-        edgeList.add(new SimpleEdge3d(p2, p4));
-
-        mRoadManager = new com.shitu.routing.RoadManager(edgeList);
+        mRoadManager = new com.shitu.routing.RoadManager(edgeList, roomList);
     }
 
     private void testRouting() {
