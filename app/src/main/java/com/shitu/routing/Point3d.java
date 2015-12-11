@@ -21,6 +21,12 @@ public class Point3d {
         return floor;
     }
 
+    public void setValue(double lat, double lon, int flr) {
+        x = lat;
+        y = lon;
+        floor = flr;
+    }
+
     //默认构造函数
     public Point3d(){
         double x = 0.0;
