@@ -1,8 +1,16 @@
 package com.shitu.indoor;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.shitu.routing.Point3d;
 import com.shitu.routing.ProjectPoint;
@@ -13,9 +21,6 @@ import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.bonuspack.overlays.MapEventsReceiver;
 import org.osmdroid.bonuspack.overlays.Polyline;
-import org.osmdroid.bonuspack.routing.OSRMRoadManager;
-import org.osmdroid.bonuspack.routing.Road;
-import org.osmdroid.bonuspack.routing.RoadManager;
 import org.osmdroid.events.MapListener;
 import org.osmdroid.events.ScrollEvent;
 import org.osmdroid.events.ZoomEvent;
@@ -38,24 +43,35 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
     public static final GeoPoint GLODON = new GeoPoint(40.044771, 116.277071);
 
-    private MapView mapView = null;
+    public static final String ROOM_NUMBER_TOKEN = "RoomNo.";
 
-    private GeoPoint start = null;
-    private GeoPoint end = null;
+    private MapView mapView = null;
 
     org.osmdroid.bonuspack.overlays.Polyline mRoadLay = null;
 
     // routing module.
     com.shitu.routing.RoadManager mRoadManager = null;
 
+    org.osmdroid.views.overlay.Overlay mStartOverlay = null;
+    Point3d mStartPoint = new Point3d();
+    org.osmdroid.views.overlay.Overlay mEndOverlay = null;
+    Point3d mEndPoint = new Point3d();
+
+    org.osmdroid.views.overlay.Overlay mWayOverlay = null;
+
+    LinearLayout mNavInfoLayout = null;
+    TextView mEndInfo = null;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_map);
 
+        initViewElements();
+
         mapView = (MapView) findViewById(R.id.mapview);
         mapView.setClickable(true);
-        mapView.setBuiltInZoomControls(true);
+        mapView.setBuiltInZoomControls(false);
         mapView.setMultiTouchControls(true);
         mapView.setUseDataConnection(false);
         mapView.setMaxZoomLevel(21);
@@ -64,47 +80,33 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
         initRoadManager();
 //        testRouting();
+
+        tryStartRoutingFromIntent();
     }
 
     @Override
     public boolean singleTapConfirmedHelper(GeoPoint p) {
-        if (start == null) {
-            start = p;
-        }
-        else {
-            end = p;
-            showRouting();
-        }
-
         return true;
     }
 
     @Override
     public boolean longPressHelper(GeoPoint p) {
-//        return super.longPressHelper(p);
         return true;
     }
 
-    private void showRouting()
-    {
-        if (mRoadLay != null) {
-            mapView.getOverlays().remove(mRoadLay);
-        }
+    void initViewElements() {
+        // hide nav info panel at first;
+        mNavInfoLayout = (LinearLayout) findViewById(R.id.navInfoLayout);
+        mNavInfoLayout.setVisibility(View.INVISIBLE);
 
-        RoadManager rm = new OSRMRoadManager();
+        mEndInfo = (TextView) findViewById(R.id.destInfoText);
 
-        ArrayList<GeoPoint> ptArray = new ArrayList<GeoPoint>();
-        ptArray.add(start);
-        ptArray.add(end);
-        Road road = rm.getRoad(ptArray);
+        // install button listener;
+        Button searchBttn = (Button) findViewById(R.id.searchButton);
+        searchBttn.setOnClickListener(mSearchButtonListener);
 
-        mRoadLay = RoadManager.buildRoadOverlay(road, this);
-        mapView.getOverlays().add(mRoadLay);
-
-        mapView.invalidate();
-
-        // invalidate start point.
-        start = null;
+        Button navButton = (Button) findViewById(R.id.navButton);
+        navButton.setOnClickListener(mNavButtonListener);
     }
 
     private void initMapResource() {
@@ -137,7 +139,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mapView.setMapListener(new OverlayMapListener());
 
         IMapController mapViewController = mapView.getController();
-        mapViewController.setZoom(18);
+        mapViewController.setZoom(19);
         mapViewController.setCenter(GLODON);
     }
 
@@ -225,5 +227,163 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mapView.getOverlays().add(wayOverlay);
         mapView.getOverlays().add(itemOverlay);
         mapView.invalidate();
+    }
+
+    void tryStartRoutingFromIntent() {
+        int RoomNum = getIntent().getIntExtra(ROOM_NUMBER_TOKEN, -1);
+        if (-1 != RoomNum && getRoomLocation(RoomNum, mStartPoint)) {
+            boolean bSucceed = Routing();
+            if (!bSucceed) {
+                Toast.makeText(getApplicationContext(), "Road NOT FOUND. ", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    boolean Routing() {
+        mRoadManager.SetStartPoint(mStartPoint);
+        mRoadManager.SetEndPoint(mEndPoint);
+
+        ArrayList<Point3d> way = mRoadManager.GetRoad();
+        if (way.isEmpty()) {
+            return false;
+        }
+
+        // create osm:GeoPoint list.
+        ArrayList<GeoPoint> ptArray = new ArrayList<>();
+
+        // put start pt.
+        ptArray.add(new GeoPoint(mStartPoint.Lat(), mStartPoint.Lon()));
+        for (Point3d p : way) {
+            ptArray.add(new GeoPoint(p.Lat(), p.Lon()));
+        }
+
+        // put end pt.
+        ptArray.add(new GeoPoint(mEndPoint.Lat(), mEndPoint.Lon()));
+
+        // create osm route overlay.
+        Polyline wayOverlay = new Polyline(this);
+        wayOverlay.setPoints(ptArray);
+        wayOverlay.setColor(0xff0000fb);
+        wayOverlay.setWidth(3.0f);
+
+        mapView.getOverlays().add(wayOverlay);
+        mWayOverlay = wayOverlay;
+
+        // create start & end point overlay.
+        mStartOverlay = createMarkerOverlay(mStartPoint, R.drawable.start);
+        mEndOverlay = createMarkerOverlay(mEndPoint, R.drawable.dest);
+
+        return true;
+    }
+
+    boolean getRoomLocation(int roomId, Point3d roomCoord) {
+        if (roomId == 603) {
+            roomCoord.setValue(40.0443256069883, 116.277749070418, 6);
+            return  true;
+        }
+        else {
+            return false;
+        }
+    }
+
+    ItemizedIconOverlay<OverlayItem> createMarkerOverlay(Point3d pos, int markerId) {
+        GeoPoint geoPt = new GeoPoint(pos.Lat(), pos.Lon());
+        OverlayItem item = new OverlayItem("Marker", "it's a marker", geoPt);
+
+        Drawable marker = getResources().getDrawable(markerId);
+        item.setMarker(marker);
+
+        ArrayList<OverlayItem> itemArray = new ArrayList<>();
+        itemArray.add(item);
+
+        final ResourceProxy resProxy = new DefaultResourceProxyImpl(getApplicationContext());
+        ItemizedIconOverlay<OverlayItem> iconOverlay = new ItemizedIconOverlay<OverlayItem>(itemArray,
+                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
+                    public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
+                        return true;
+                    }
+                    public boolean onItemLongPress(final int index, final OverlayItem item) {
+                        return true;
+                    }
+                }, resProxy);
+        mapView.getOverlays().add(iconOverlay);
+
+        mapView.getController().setZoom(20);
+        mapView.getController().setCenter(geoPt);
+
+        mapView.invalidate();
+
+        return iconOverlay;
+    }
+
+    void removeOverlay(org.osmdroid.views.overlay.Overlay overlay) {
+        mapView.getOverlays().remove(overlay);
+        mapView.invalidate();
+    }
+
+    void hideNavInfoLayout() {
+        mNavInfoLayout.setVisibility(View.INVISIBLE);
+    }
+
+    Button.OnClickListener mSearchButtonListener = new Button.OnClickListener() {
+        public void onClick(View v) {
+            // on clicking the button, hide the keyboard first.
+            InputMethodManager inputMethodManager = (InputMethodManager)  getSystemService(Activity.INPUT_METHOD_SERVICE);
+            inputMethodManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
+
+            // remove previously created destination mark.
+            if (null != mEndOverlay) {
+                removeOverlay(mEndOverlay);
+                mEndOverlay = null;
+            }
+
+            EditText text = (EditText)findViewById(R.id.searchText);
+            String roomText = text.getText().toString();
+
+            if (getRoomLocation(Integer.parseInt(roomText), mEndPoint)) {
+                mEndOverlay = createMarkerOverlay(mEndPoint, R.drawable.dest);
+
+                mEndInfo.setText("Target: " + roomText);
+                mNavInfoLayout.setVisibility(View.VISIBLE);
+            }
+            else {
+                Toast.makeText(getApplicationContext(), "Room #" + roomText + "# NOT FOUND!",
+                        Toast.LENGTH_LONG).show();
+            }
+        }
+    };
+
+    Button.OnClickListener mNavButtonListener = new Button.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
+            startActivity(intent);
+        }
+    };
+
+    @Override
+    public void onBackPressed() {
+        // just chose the destination point.
+        if (mNavInfoLayout.getVisibility() == View.VISIBLE) {
+            hideNavInfoLayout();
+
+            removeOverlay(mEndOverlay);
+            mEndOverlay = null;
+        }
+        // showing the route.
+        else if (null != mWayOverlay) {
+            removeOverlay(mWayOverlay);
+            mWayOverlay = null;
+
+            removeOverlay(mStartOverlay);
+            mStartOverlay = null;
+
+            removeOverlay(mEndOverlay);
+            mEndOverlay = null;
+        }
+        // no previous active event, return directly.
+        else {
+            super.onBackPressed();
+        }
     }
 }
