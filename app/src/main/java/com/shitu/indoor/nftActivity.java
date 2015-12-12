@@ -4,6 +4,7 @@ import com.shitu.indoor.R;
 import com.shitu.arbase.camera.CameraPreferencesActivity;
 import com.shitu.orientation.sensors.Orientation;
 import com.shitu.orientation.utils.OrientationSensorInterface;
+import com.shitu.orientation.utils.TargetingDetector;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -31,7 +32,7 @@ import android.widget.FrameLayout;
 /**
  * Created by yangy-z on 2015/12/7.
  */
-public class nftActivity extends Activity implements OrientationSensorInterface {
+public class nftActivity extends Activity /*implements OrientationSensorInterface*/ {
     private static final String TAG = "nft";
 
     static {
@@ -60,7 +61,9 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
 
     private FrameLayout mainLayout;
 
-    private Orientation orientationSensor;
+//    private Orientation orientationSensor;
+
+    private TargetingDetector mDetector = null;
 
     static nftActivity mInstance = null;
     static int mRoomNumber = -1;
@@ -71,16 +74,19 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
 
         try {
             if (!markerName.isEmpty()) {
-                int roomId = Integer.parseInt(markerName);
-                if (roomId != mRoomNumber) {
-                    Intent mapActivity = new Intent(mInstance.getApplicationContext(), MapActivity.class);
-                    mapActivity.putExtra(MapActivity.ROOM_NUMBER_TOKEN, roomId);
+                mInstance.mDetector.SetExtra(MapActivity.ROOM_NUMBER_TOKEN, markerName);
 
-                    mInstance.startActivity(mapActivity);
-                    mInstance.finish();
-
-                    mRoomNumber = roomId;
-                }
+//                int roomId = Integer.parseInt(markerName);
+//                if (roomId != mRoomNumber) {
+//
+//                    Intent mapActivity = new Intent(mInstance.getApplicationContext(), MapActivity.class);
+//                    mapActivity.putExtra(MapActivity.ROOM_NUMBER_TOKEN, roomId);
+//
+//                    mInstance.startActivity(mapActivity);
+//                    mInstance.finish();
+//
+//                    mRoomNumber = roomId;
+//                }
             }
         } catch (NumberFormatException e) {
             Log.e("ShiTu", "Invalid Room Number: " + markerName);
@@ -96,7 +102,8 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
         mInstance = this;
         mRoomNumber = -1;
 
-        orientationSensor = new Orientation(this.getApplicationContext(), this);
+//        orientationSensor = new Orientation(this.getApplicationContext(), this);
+        mDetector = new TargetingDetector(TargetingDetector.Target.FACING_UP, MapActivity.class, this, true);
 
         boolean needActionBar = false;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.HONEYCOMB) {
@@ -137,9 +144,11 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
     public void onResume() {
         super.onResume();
 
-        orientationSensor.init(1.0, 1.0, 1.0);
-        orientationSensor.on(1);
-        orientationSensor.isSupport();
+        mDetector.Start();
+
+//        orientationSensor.init(1.0, 1.0, 1.0);
+//        orientationSensor.on(1);
+//        orientationSensor.isSupport();
 
         // Update info on whether we have an Internet connection.
         ConnectivityManager cm = (ConnectivityManager)this.getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -171,7 +180,7 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
 
     @Override
     protected void onPause() {
-        orientationSensor.off();
+//        orientationSensor.off();
 
         super.onPause();
 
@@ -183,6 +192,8 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
         // with the camera preview gone.
         mainLayout.removeView(glView);
         mainLayout.removeView(camSurface);
+
+        mDetector.Stop();
     }
 
     @Override
@@ -190,6 +201,8 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
         super.onStop();
 
         nftActivity.nativeStop();
+
+        mDetector.Stop();
     }
 
     @Override
@@ -200,22 +213,22 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
         nftActivity.nativeDestroy();
     }
 
-    @Override
-    public void orientation(Double AZIMUTH, Double PITCH, Double ROLL) {
-//        try {
-//            if (!activeMarkerName.isEmpty()) {
-//                int roomId = Integer.parseInt(activeMarkerName);
-//
-//                Intent mapActivity = new Intent(getApplicationContext(), MapActivity.class);
-//                mapActivity.putExtra(MapActivity.ROOM_NUMBER_TOKEN, roomId);
-//                startActivity(mapActivity);
-//
-//                finish();
-//            }
-//        } catch (NumberFormatException e) {
-//            Log.e("ShiTu", "Invalid Room Number: " + activeMarkerName);
-//        }
-    }
+//    @Override
+//    public void orientation(Double AZIMUTH, Double PITCH, Double ROLL) {
+////        try {
+////            if (!activeMarkerName.isEmpty()) {
+////                int roomId = Integer.parseInt(activeMarkerName);
+////
+////                Intent mapActivity = new Intent(getApplicationContext(), MapActivity.class);
+////                mapActivity.putExtra(MapActivity.ROOM_NUMBER_TOKEN, roomId);
+////                startActivity(mapActivity);
+////
+////                finish();
+////            }
+////        } catch (NumberFormatException e) {
+////            Log.e("ShiTu", "Invalid Room Number: " + activeMarkerName);
+////        }
+//    }
 
     private void updateNativeDisplayParameters()
     {

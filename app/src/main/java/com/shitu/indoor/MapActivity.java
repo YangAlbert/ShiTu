@@ -233,12 +233,17 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     }
 
     void tryStartRoutingFromIntent() {
-        int RoomNum = getIntent().getIntExtra(ROOM_NUMBER_TOKEN, -1);
-        if (-1 != RoomNum && getRoomLocation(RoomNum, mStartPoint)) {
-            boolean bSucceed = Routing();
-            if (!bSucceed) {
-                Toast.makeText(getApplicationContext(), "Road NOT FOUND. ", Toast.LENGTH_SHORT).show();
+        try {
+            int RoomNum = Integer.parseInt(getIntent().getStringExtra(ROOM_NUMBER_TOKEN));
+
+            if (-1 != RoomNum && getRoomLocation(RoomNum, mStartPoint)) {
+                boolean bSucceed = Routing();
+                if (!bSucceed) {
+                    Toast.makeText(getApplicationContext(), "Road NOT FOUND. ", Toast.LENGTH_SHORT).show();
+                }
             }
+        } catch (NumberFormatException e) {
+            Log.d("ShiTu", "no room number found.");
         }
     }
 

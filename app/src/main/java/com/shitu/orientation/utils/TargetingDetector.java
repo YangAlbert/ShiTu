@@ -7,6 +7,8 @@ import android.util.Log;
 import com.shitu.indoor.MapActivity;
 import com.shitu.orientation.sensors.Orientation;
 
+import java.security.Key;
+
 /**
  * Created by yangrj on 2015/12/11.
  */
@@ -26,6 +28,9 @@ public class TargetingDetector implements OrientationSensorInterface {
     boolean mGestureTiggered = false;
     int mConditionCnt = 0;
 
+    String mExtraKey = "";
+    String mExtraValue = "";
+
     public TargetingDetector(Target tar, Class<?> cls, Activity srcActivity, boolean bFinish) {
         mTarget = tar;
         mInvokeClass = cls;
@@ -34,6 +39,11 @@ public class TargetingDetector implements OrientationSensorInterface {
 
         mOrientSensor = new Orientation(mSourceActivity.getApplicationContext(), this);
         mOrientSensor.on(1);
+    }
+
+    public void SetExtra(String key, String value) {
+        mExtraKey = key;
+        mExtraValue = value;
     }
 
     public void Stop() {
@@ -55,6 +65,10 @@ public class TargetingDetector implements OrientationSensorInterface {
                 mGestureTiggered = true;
 
                 Intent intent = new Intent(mSourceActivity.getApplicationContext(), mInvokeClass);
+                if (!mExtraKey.isEmpty()) {
+                    intent.putExtra(mExtraKey, mExtraValue);
+                }
+
                 mSourceActivity.startActivity(intent);
                 if (mFinishSource) {
                     mSourceActivity.finish();
