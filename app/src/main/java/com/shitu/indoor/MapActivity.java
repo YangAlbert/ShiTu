@@ -168,6 +168,10 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         ArrayList<Room> roomList = osmParser.GetRawRooms();
         Assert.assertNotNull(roomList);
 
+        // 瘦身 osm 文件
+//        path = Environment.getExternalStorageDirectory() + "/osmdroid/Glodon_Outdoor_1.osm";
+//        osmParser.WriteXml(path);
+
         mRoadManager = new com.shitu.routing.RoadManager(edgeList, roomList);
 
 //        showAllRoads();
