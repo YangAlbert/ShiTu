@@ -58,7 +58,7 @@ public class TargetingDetector implements OrientationSensorInterface {
     public void orientation(Double azimuth, Double pitch, Double roll) {
         boolean bIsFacingUp = Math.abs(pitch) < 20.0f && Math.abs(roll) < 20.0f;
 
-        if ((mTarget==Target.FACING_USER) ^ bIsFacingUp) {
+        if (((mTarget==Target.FACING_USER) ^ bIsFacingUp) && !mExtraKey.isEmpty() ) {
             if (!mGestureTiggered && mConditionCnt>=10) {
                 // stop sensor.
                 mOrientSensor.off();
