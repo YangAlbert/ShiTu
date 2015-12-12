@@ -66,8 +66,18 @@ public class Point3d {
         double ptX = pt.x * Math.PI / 180;
         double ptY = pt.y * Math.PI / 180;
         double tempSum = Math.cos(arcY) * Math.cos(ptY) * Math.cos(arcX - ptX) + Math.sin(arcY) * Math.sin(ptY);
-        double flatDis = earthRadius * Math.acos(tempSum);
-        return Math.pow(flatDis, 2) + Math.pow((floor - pt.floor) * EdgeAttribute.floorHeight, 2);
+        double flatDis = 0.0;
+        if (Math.abs(1 - tempSum) > 1E-14)
+        {
+            flatDis = earthRadius * Math.acos(tempSum);
+            return Math.pow(flatDis, 2) + Math.pow((floor - pt.floor) * EdgeAttribute.floorHeight, 2);
+        }
+        else
+        {
+            return Math.pow((floor - pt.floor) * EdgeAttribute.floorHeight, 2);
+        }
+
+
     }
 
 

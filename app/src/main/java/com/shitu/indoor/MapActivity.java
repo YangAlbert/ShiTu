@@ -13,12 +13,15 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.shitu.routing.Edge3d;
 import com.shitu.routing.OsmWaysParser;
 import com.shitu.routing.Point3d;
 import com.shitu.routing.Point3dList;
 import com.shitu.routing.ProjectPoint;
 import com.shitu.routing.Room;
 import com.shitu.routing.SimpleEdge3d;
+
+import junit.framework.Assert;
 
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
@@ -47,6 +50,7 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
     public static final GeoPoint GLODON = new GeoPoint(40.044771, 116.277071);
 
     public static final String ROOM_NUMBER_TOKEN = "RoomNo.";
+    public static final String SHOW_ROUTE_TOKEN = "ShowRoute";
 
     private MapView mapView = null;
 
@@ -81,7 +85,7 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
         mapView.setBuiltInZoomControls(false);
         mapView.setMultiTouchControls(true);
         mapView.setUseDataConnection(false);
-        mapView.setMaxZoomLevel(21);
+        mapView.setMaxZoomLevel(22);
 
         initMapResource();
 
@@ -126,15 +130,13 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
     }
 
     private void initMapResource() {
-        final ITileSource tileSource = new XYTileSource("GlodonMap", 15, 21, 256, ".png", null);
+        final ITileSource tileSource = new XYTileSource("GlodonMap", 19, 22, 256, ".png", null);
         MapTileModuleProviderBase tileModuleProvider = new MapTileFileArchiveProvider(
                 new SimpleRegisterReceiver(getApplicationContext()),
                 tileSource, null);
 
         MapTileProviderBase mapProvider = new MapTileProviderArray(tileSource, null,
                 new MapTileModuleProviderBase[] { tileModuleProvider });
-//        final TilesOverlay tileOverlay = new TilesOverlay(mapProvider, getBaseContext());
-//        mapView.getOverlays().add(tileOverlay);
 
         mapView.setTileProvider(mapProvider);
 
@@ -165,12 +167,21 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
     private void initRoadManager() {
         String fileName = "osmdroid/Glodon_Outdoor.osm";// test.
         String path = Environment.getExternalStorageDirectory() + "/" + fileName;
-        OsmWaysParser ways_parser = new OsmWaysParser(path);
-        ArrayList<SimpleEdge3d> edgeList = ways_parser.GetRawWays();
-        assert edgeList != null;
-        ArrayList<Room> roomList = ways_parser.GetRawRooms();
+        OsmWaysParser osmParser = new OsmWaysParser(path);
+
+        ArrayList<SimpleEdge3d> edgeList = osmParser.GetRawWays();
+        Assert.assertNotNull(edgeList);
+
+        ArrayList<Room> roomList = osmParser.GetRawRooms();
+        Assert.assertNotNull(roomList);
+
+        // 给 osm 文件瘦身的接口
+//        path = Environment.getExternalStorageDirectory() + "/osmdroid/Glodon_Outdoor_1.osm";
+//        ways_parser.WriteXml(path);
 
         mRoadManager = new com.shitu.routing.RoadManager(edgeList, roomList);
+
+//        showAllRoads();
     }
 
     private void testRouting() {
@@ -279,12 +290,10 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
     }
 
     boolean getRoomLocation(int roomId, Point3d roomCoord) {
-        if (roomId == 603) {
-            roomCoord.setValue(40.0443256069883, 116.277749070418, 6);
-            return  true;
-        }
-        else  if (roomId == 631) {
-            roomCoord.setValue(40.0446795680168, 116.276742256975, 6);
+        Assert.assertNotNull(mRoadManager);
+        Point3d pos = mRoadManager.GetRoomPosition(roomId);
+        if (null != pos) {
+            roomCoord.setValue(pos.Lat(), pos.Lon(), pos.Floor());
             return true;
         }
         else {
@@ -409,5 +418,39 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
         else {
             super.onBackPressed();
         }
+    }
+
+    public void showAllRoads() {
+
+        ArrayList<Edge3d> edgeList = mRoadManager.getEdgeList();
+
+        int count = 0;
+        ArrayList<GeoPoint> geoPtArray = new ArrayList<>();
+        for (Edge3d e : edgeList) {
+            geoPtArray.clear();
+
+            Point3d startPt = e.getStartPt();
+            geoPtArray.add(new GeoPoint(startPt.Lat(), startPt.Lon()));
+
+            Point3d endPt = e.getEndPt();
+            geoPtArray.add(new GeoPoint(endPt.Lat(), endPt.Lon()));
+
+            Polyline wayOverlay = new Polyline(this);
+            wayOverlay.setPoints(geoPtArray);
+            wayOverlay.setColor(0xfffb0000);
+            wayOverlay.setWidth(4.0f);
+            mapView.getOverlays().add(wayOverlay);
+
+//            if (++count >= 50) break;
+        }
+
+        // create osm route overlay.
+//        Polyline wayOverlay = new Polyline(this);
+//        wayOverlay.setPoints(geoPtArray);
+//        wayOverlay.setColor(0xfffb0000);
+//        wayOverlay.setWidth(4.0f);
+//
+//        mapView.getOverlays().add(wayOverlay);
+        mapView.invalidate();
     }
 }

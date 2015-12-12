@@ -29,7 +29,7 @@ public class NodePoint3d {
     public boolean equals(Object o) {
         NodePoint3d pt = (NodePoint3d)o;
         if (null != pt) {
-            return this.index == pt.index;
+            return (this.index == pt.index) && (Math.abs(this.time - pt.time) < 0.01);
         }
         else {
             return false;

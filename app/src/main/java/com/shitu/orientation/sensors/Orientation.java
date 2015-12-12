@@ -125,19 +125,23 @@ public class Orientation implements Isensor,Observer {
         switch (speed){
             case 0:
                 fuseTimer.scheduleAtFixedRate(new calculateFusedOrientationTask(),
-                        1, 224);
+                        1, 500);
+//                        1, 224);
                 break;
             case 1:
                 fuseTimer.scheduleAtFixedRate(new calculateFusedOrientationTask(),
-                        1, 77);
+                        1, 100);
+//                        1, 77);
                 break;
             case 2:
                 fuseTimer.scheduleAtFixedRate(new calculateFusedOrientationTask(),
-                        1, 37);
+                        1, 50);
+//                        1, 37);
                 break;
             default:
                 fuseTimer.scheduleAtFixedRate(new calculateFusedOrientationTask(),
-                        1, 16);
+                        1, 20);
+//                        1, 16);
         }
 
     }
