@@ -1,5 +1,5 @@
 # Number of markers
-10
+3
 
 # Entries for each marker. Format is:
 #
@@ -13,42 +13,34 @@
 #                  at time of writing, equals 5.0.
 # A blank line
 
-../DataNFT/logo
+../DataNFT/6-37
 NFT
 FILTER 15.0
 
-../DataNFT/0
+../DataNFT/6-22
 NFT
 FILTER 15.0
 
-../DataNFT/1
+../DataNFT/6-24
 NFT
 FILTER 15.0
 
-../DataNFT/2
+../DataNFT/6-26
 NFT
 FILTER 15.0
 
-../DataNFT/3
+../DataNFT/6-28
 NFT
 FILTER 15.0
 
-../DataNFT/4
+../DataNFT/6-39
 NFT
 FILTER 15.0
 
-../DataNFT/5
+../DataNFT/6-43
 NFT
 FILTER 15.0
 
-../DataNFT/6
-NFT
-FILTER 15.0
-
-../DataNFT/7
-NFT
-FILTER 15.0
-
-../DataNFT/8
+../DataNFT/6-45
 NFT
 FILTER 15.0
