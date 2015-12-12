@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -65,6 +66,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     static Point3d mEndPoint = new Point3d();
 
     org.osmdroid.views.overlay.Overlay mWayOverlay = null;
+    ArrayList<org.osmdroid.views.overlay.Overlay> mPOIOverlays = new ArrayList<>();
 
     LinearLayout mEndInfoLayout = null;
     TextView mEndInfo = null;
@@ -103,9 +105,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     @Override
     public boolean singleTapConfirmedHelper(GeoPoint p) {
         // remove existing overlay first.
-        if (null != mEndOverlay) {
-            mapView.getOverlays().remove(mEndOverlay);
-        }
+        clearOverlays();
 
         mEndOverlay = createMarkerOverlay2(p, R.drawable.dest);
         mEndPoint.setValue(p.getLatitude(), p.getLongitude(), 6);
@@ -311,13 +311,57 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         return marker;
     }
 
+    void createPoiOverlay(ArrayList<Room> poiArray) {
+        // remove all previous overlays.
+        mapView.getOverlays().removeAll(mPOIOverlays);
+        mPOIOverlays.clear();
+
+        for (Room r : poiArray) {
+            org.osmdroid.views.overlay.Overlay poiOverlay = createMarkerOverlay2(r.pt, R.drawable.marker_poi_cluster);
+            mPOIOverlays.add(poiOverlay);
+        }
+    }
+
     void removeOverlay(org.osmdroid.views.overlay.Overlay overlay) {
         mapView.getOverlays().remove(overlay);
         mapView.invalidate();
     }
 
-    void hideNavInfoLayout() {
-        mEndInfoLayout.setVisibility(View.INVISIBLE);
+    boolean clearOverlays() {
+        boolean bHasOverlay = false;
+        if (null != mEndOverlay) {
+            mapView.getOverlays().remove(mEndOverlay);
+            mEndOverlay = null;
+            bHasOverlay = true;
+        }
+        if (null != mStartOverlay) {
+            mapView.getOverlays().remove(mStartOverlay);
+            mStartOverlay = null;
+            bHasOverlay = true;
+        }
+        if (null != mWayOverlay) {
+            mapView.getOverlays().remove(mWayOverlay);
+            mWayOverlay = null;
+            bHasOverlay = true;
+        }
+        if (!mPOIOverlays.isEmpty()) {
+            mapView.getOverlays().removeAll(mPOIOverlays);
+            mPOIOverlays.clear();
+            bHasOverlay = true;
+        }
+
+        mapView.invalidate();
+
+        if (mEndInfoLayout.getVisibility() == View.VISIBLE) {
+            mEndInfoLayout.setVisibility(View.INVISIBLE);
+            bHasOverlay = true;
+        }
+        if (mRoutingInfoLayout.getVisibility() == View.VISIBLE) {
+            mRoutingInfoLayout.setVisibility(View.INVISIBLE);
+            bHasOverlay = true;
+        }
+
+        return bHasOverlay;
     }
 
     Button.OnClickListener mSearchButtonListener = new Button.OnClickListener() {
@@ -327,25 +371,33 @@ public class MapActivity extends Activity implements MapEventsReceiver {
             inputMethodManager.hideSoftInputFromWindow(v.getWindowToken(), 0);
 
             // remove previously created destination mark.
-            if (null != mEndOverlay) {
-                removeOverlay(mEndOverlay);
-                mEndOverlay = null;
-            }
+            clearOverlays();
 
             EditText text = (EditText)findViewById(R.id.searchText);
             mStartRoom = text.getText().toString();
+            try {
+                // first check if input field is a poi.
+                if (mRoadManager.hasPoi(mStartRoom)) {
+                    createPoiOverlay(mRoadManager.getPoiList(mStartRoom));
+                }
+                // then check if it matches a room.
+                else if (getRoomLocation(Integer.parseInt(mStartRoom), mEndPoint)) {
+                    // clear
+                    mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
+                    mapView.getController().setCenter(new GeoPoint(mEndPoint.Lat(), mEndPoint.Lon()));
+                    mapView.getController().setZoom(20);
 
-            if (getRoomLocation(Integer.parseInt(mStartRoom), mEndPoint)) {
-                mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
-                mapView.getController().setCenter(new GeoPoint(mEndPoint.Lat(), mEndPoint.Lon()));
-                mapView.getController().setZoom(20);
-
-                mEndInfo.setText("Room: " + mStartRoom);
-                mEndInfoLayout.setVisibility(View.VISIBLE);
-            }
-            else {
-                Toast.makeText(getApplicationContext(), "Room #" + mStartRoom + "# NOT FOUND!",
-                        Toast.LENGTH_LONG).show();
+                    mEndInfo.setText("Room: " + mStartRoom);
+                    mEndInfoLayout.setVisibility(View.VISIBLE);
+                }
+                // at last, report nothing was find.
+                else {
+                    Toast.makeText(getApplicationContext(), "Room #" + mStartRoom + "# NOT FOUND!",
+                            Toast.LENGTH_LONG).show();
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(getApplicationContext(), "Input string is illegal!", Toast.LENGTH_SHORT).show();
+                Log.e("ShiTu", e.toString());
             }
         }
     };
@@ -362,27 +414,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     @Override
     public void onBackPressed() {
         // just chose the destination point.
-        if (mEndInfoLayout.getVisibility() == View.VISIBLE) {
-            mEndInfoLayout.setVisibility(View.INVISIBLE);
-
-            removeOverlay(mEndOverlay);
-            mEndOverlay = null;
-        }
-        // showing the route.
-        else if (mRoutingInfoLayout.getVisibility() == View.VISIBLE) {
-            mRoutingInfoLayout.setVisibility(View.INVISIBLE);
-
-            removeOverlay(mWayOverlay);
-            mWayOverlay = null;
-
-            removeOverlay(mStartOverlay);
-            mStartOverlay = null;
-
-            removeOverlay(mEndOverlay);
-            mEndOverlay = null;
-        }
-        // no previous active event, return directly.
-        else {
+        if (!clearOverlays()) {
             super.onBackPressed();
         }
     }
