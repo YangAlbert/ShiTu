@@ -203,6 +203,11 @@ public class RoadManager  {
                 if (hasStartPt && hasEndPt) break;
             }
 
+            if (startPtIndex ==27 || endPtIndex == 27)
+            {
+                int a = 1;
+            }
+
             if (hasStartPt && hasEndPt) {
                 nodePts.get(startPtIndex).edgeIndex.add(i);
                 nodePts.get(startPtIndex).dualNodeIndex.add(endPtIndex);
@@ -316,7 +321,12 @@ public class RoadManager  {
                 {
                     int tempEdgeIndex = (int)edgeIndex.get(i);
                     double timeNew = minTimeNew + edgeList.get(tempEdgeIndex).time;
-                    if (timeNew + 0.01 < timeOld) nodePts.get(tempNodeIndex).time = timeNew;
+                    if (timeNew + 0.01 < timeOld)
+                    {
+                        nodePts.get(tempNodeIndex).time = timeNew;
+                        //candidateNodePts.get(i).time = timeNew;
+                    }
+
                     candidateNodePts.add(nodePts.get(tempNodeIndex));
                 }
             }
