@@ -119,7 +119,7 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
         super.onResume();
 
         orientationSensor.init(1.0, 1.0, 1.0);
-        orientationSensor.on(2);
+        orientationSensor.on(1);
         orientationSensor.isSupport();
 
         // Update info on whether we have an Internet connection.
@@ -183,13 +183,21 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
 
     @Override
     public void orientation(Double AZIMUTH, Double PITCH, Double ROLL) {
-/*
-        Log.d("Azimuth", String.valueOf(AZIMUTH));
-        Log.d("Pitch", String.valueOf(PITCH));
-        Log.d("Roll", String.valueOf(ROLL));
-*/
         String activeMarkerName = getCurMarkerName();
         Log.d("Room Number", activeMarkerName);
+        try {
+            if (!activeMarkerName.isEmpty()) {
+                int roomId = Integer.parseInt(activeMarkerName);
+
+                Intent mapActivity = new Intent(getApplicationContext(), MapActivity.class);
+                mapActivity.putExtra(MapActivity.ROOM_NUMBER_TOKEN, roomId);
+                startActivity(mapActivity);
+
+                finish();
+            }
+        } catch (NumberFormatException e) {
+            Log.e("ShiTu", "Invalid Room Number: " + activeMarkerName);
+        }
     }
 
     private void updateNativeDisplayParameters()
