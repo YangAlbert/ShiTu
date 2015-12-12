@@ -55,12 +55,21 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
     public static native void nativeDisplayParametersChanged(int orientation, int w, int h, int dpi); // 0 = portrait, 1 = landscape (device rotated 90 degrees ccw), 2 = portrait upside down, 3 = landscape reverse (device rotated 90 degrees cw).
     public static native void nativeSetInternetState(int state);
 
+    private static native String nativeGetCurMarkerName();
+
     private GLSurfaceView glView;
     private CameraSurface camSurface;
 
     private FrameLayout mainLayout;
 
     private Orientation orientationSensor;
+
+    private String getCurMarkerName()
+    {
+        String name = nativeGetCurMarkerName();
+        name.replace("-", "");
+        return name;
+    }
 
     /** Called when the activity is first created. */
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
@@ -179,6 +188,8 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
         Log.d("Pitch", String.valueOf(PITCH));
         Log.d("Roll", String.valueOf(ROLL));
 */
+        String activeMarkerName = getCurMarkerName();
+        Log.d("Room Number", activeMarkerName);
     }
 
     private void updateNativeDisplayParameters()
