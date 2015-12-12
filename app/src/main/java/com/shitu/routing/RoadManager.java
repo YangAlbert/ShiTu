@@ -2,6 +2,7 @@ package com.shitu.routing;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 
 /**
  * Created by DongliangLyu on 2015/12/3.
@@ -16,11 +17,17 @@ public class RoadManager  {
     private ArrayList<Edge3d> edgeList;
     //topological relation
     private ArrayList<NodePoint3d> nodePts;
+    private ArrayList<Room> mRoomList;
 
-    public RoadManager(ArrayList<SimpleEdge3d> simpleEdges)
+    public RoadManager(ArrayList<SimpleEdge3d> simpleEdges, ArrayList<Room> roomList)
     {
         edgeList = GetEdgeList(simpleEdges);
+        mRoomList = GetRoomList(roomList);
         nodePts = GetNodePoints();
+    }
+
+    public ArrayList<Edge3d> getEdgeList() {
+        return edgeList;
     }
 
     public void SetStartPoint(Point3d startPt0)
@@ -40,6 +47,38 @@ public class RoadManager  {
         RefreshTime();
         CalcReachingTime();
         return new Point3dList(CalcShortestPath());
+    }
+
+    public Point3d GetRoomPosition(int roomNumber)
+    {
+        for (int i = 0; i < mRoomList.size(); ++i)
+        {
+            if (mRoomList.get(i).number == roomNumber) {
+                return mRoomList.get(i).pt;
+            }
+        }
+        return null;
+    }
+
+    public int GetRoomAngle(int roomNumber)
+    {
+        for (int i = 0; i < mRoomList.size(); ++i)
+        {
+            if (mRoomList.get(i).number == roomNumber) {
+                return mRoomList.get(i).angle;
+            }
+        }
+        return 0;
+    }
+
+    public ArrayList GetRoomNumbers()
+    {
+        ArrayList numbers = new ArrayList<>();
+        for (int i = 0; i < mRoomList.size(); ++i)
+        {
+            numbers.add(mRoomList.get(i).number);
+        }
+        return numbers;
     }
 
     //Refresh node time
@@ -62,9 +101,20 @@ public class RoadManager  {
         return edgeList;
     }
 
+    private ArrayList<Room> GetRoomList(ArrayList<Room> roomList)
+    {
+        ArrayList<Room> tempList = new ArrayList<Room>();
+        for (int i = 0; i < roomList.size(); ++i)
+        {
+            Room room = new Room(roomList.get(i));
+            tempList.add(room);
+        }
+        return tempList;
+    }
+
     private ArrayList<NodePoint3d> GetNodePoints()
     {
-        double distError = 1;
+        double distError = 0.2;
         ArrayList<NodePoint3d> nodePts = new ArrayList<NodePoint3d>(edgeList.size());
 
         //第0条边的起始, 终止点分别作为第0个和第1个节点
@@ -134,9 +184,9 @@ public class RoadManager  {
                 startNote.dualNodeIndex.add(nodePts.size() + 1);
                 nodePts.add(startNote);
 
-                NodePoint3d endNote = new NodePoint3d(endPt, nodePts.size() + 1);
+                NodePoint3d endNote = new NodePoint3d(endPt, nodePts.size());
                 endNote.edgeIndex.add(i);
-                endNote.dualNodeIndex.add(nodePts.size());
+                endNote.dualNodeIndex.add(nodePts.size() - 1);
                 nodePts.add(endNote);
             }
         }
@@ -200,37 +250,69 @@ public class RoadManager  {
         int minOrder = GetMinNodeOrder(candidateNodePts);
         double minTimeNew = candidateNodePts.get(minOrder).time;
 
-        //candidateNodePts.remove(minOrder);
+        ArrayList dualNodeIndex = candidateNodePts.get(minOrder).dualNodeIndex;
+        ArrayList edgeIndex = candidateNodePts.get(minOrder).edgeIndex;
+        candidateNodePts.remove(minOrder);
 
         int nodePtSize = nodePts.size();
-        int k = 1;
+        int k = 0;
         while (candidateNodePts.size() >= 1 && k < nodePtSize)
         {
-            ArrayList dualNodeIndex = candidateNodePts.get(minOrder).dualNodeIndex;
-            ArrayList edgeIndex = candidateNodePts.get(minOrder).edgeIndex;
+
             for (int i = 0; i < dualNodeIndex.size(); ++i)
             {
                 int tempNodeIndex = (int)dualNodeIndex.get(i);
                 double timeOld = nodePts.get(tempNodeIndex).time;
-                if (timeOld > minTimeOld)
+                if (timeOld > minTimeOld + 0.01)
                 {
                     int tempEdgeIndex = (int)edgeIndex.get(i);
                     double timeNew = minTimeNew + edgeList.get(tempEdgeIndex).time;
-                    if (timeNew < timeOld) nodePts.get(tempNodeIndex).time = timeNew;
+                    if (timeNew + 0.01 < timeOld) nodePts.get(tempNodeIndex).time = timeNew;
                     candidateNodePts.add(nodePts.get(tempNodeIndex));
                 }
             }
 
-            candidateNodePts.remove(minOrder);
-            minOrder = GetMinNodeOrder(candidateNodePts);
+            candidateNodePts = removeDuplicates(candidateNodePts);
             minTimeOld = minTimeNew;
+            minOrder = GetMinNodeOrder(candidateNodePts);
             minTimeNew = candidateNodePts.get(minOrder).time;
 
-            if (candidateNodePts.get(minOrder).index == endNode.index) break;
+            dualNodeIndex = candidateNodePts.get(minOrder).dualNodeIndex;
+            edgeIndex = candidateNodePts.get(minOrder).edgeIndex;
+
+            if (candidateNodePts.get(minOrder).index == endNode.index) {
+                break;
+            }
+
+            if (candidateNodePts.size() > 1) {
+                candidateNodePts.remove(minOrder);
+            }
+            else if (Math.abs(minTimeNew - minTimeOld) < 0.01) {
+                endNode = candidateNodePts.get(minOrder);
+                break;
+            }
+
+//            while (Math.abs(minTimeNew - minTimeOld) < 0.01)
+//            {
+//
+//                minOrder = GetMinNodeOrder(candidateNodePts);
+//                minTimeNew = candidateNodePts.get(minOrder).time;
+//            }
 
             k++;
         }
 
+    }
+
+    private ArrayList<NodePoint3d> removeDuplicates(ArrayList<NodePoint3d> ptArray) {
+        HashSet<NodePoint3d> ptHashSet = new HashSet<>();
+        for (NodePoint3d pt : ptArray) {
+            ptHashSet.add(pt);
+        }
+
+        ArrayList<NodePoint3d> identicalPtArray = new ArrayList<>();
+        identicalPtArray.addAll(ptHashSet);
+        return identicalPtArray;
     }
 
     private ArrayList<Point3d> CalcShortestPath()
@@ -262,6 +344,4 @@ public class RoadManager  {
         //返回最短路上的点序列
         return ptList;
     }
-
-
 }

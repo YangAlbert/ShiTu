@@ -68,4 +68,11 @@ public class Edge3d {
         Initial();
     }
 
+    public Point3d getStartPt() {
+        return startPt;
+    }
+
+    public Point3d getEndPt() {
+        return endPt;
+    }
 }

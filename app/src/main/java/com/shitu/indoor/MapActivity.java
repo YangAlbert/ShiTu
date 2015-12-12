@@ -13,19 +13,23 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.shitu.routing.Edge3d;
 import com.shitu.routing.OsmWaysParser;
 import com.shitu.routing.Point3d;
+import com.shitu.routing.Point3dList;
 import com.shitu.routing.ProjectPoint;
+import com.shitu.routing.Room;
 import com.shitu.routing.SimpleEdge3d;
+
+import junit.framework.Assert;
 
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IMapController;
+import org.osmdroid.bonuspack.overlays.MapEventsOverlay;
 import org.osmdroid.bonuspack.overlays.MapEventsReceiver;
+import org.osmdroid.bonuspack.overlays.Marker;
 import org.osmdroid.bonuspack.overlays.Polyline;
-import org.osmdroid.events.MapListener;
-import org.osmdroid.events.ScrollEvent;
-import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.MapTileProviderBase;
 import org.osmdroid.tileprovider.modules.MapTileFileArchiveProvider;
@@ -37,7 +41,6 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.OverlayItem;
-import org.osmdroid.views.overlay.TilesOverlay;
 
 import java.util.ArrayList;
 
@@ -46,23 +49,28 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     public static final GeoPoint GLODON = new GeoPoint(40.044771, 116.277071);
 
     public static final String ROOM_NUMBER_TOKEN = "RoomNo.";
+    public static final String SHOW_ROUTE_TOKEN = "ShowRoute";
 
     private MapView mapView = null;
 
     org.osmdroid.bonuspack.overlays.Polyline mRoadLay = null;
 
     // routing module.
-    com.shitu.routing.RoadManager mRoadManager = null;
+    static com.shitu.routing.RoadManager mRoadManager = null;
 
     org.osmdroid.views.overlay.Overlay mStartOverlay = null;
-    Point3d mStartPoint = new Point3d();
+    static Point3d mStartPoint = new Point3d();
+    static String mStartRoom;
     org.osmdroid.views.overlay.Overlay mEndOverlay = null;
-    Point3d mEndPoint = new Point3d();
+    static Point3d mEndPoint = new Point3d();
 
     org.osmdroid.views.overlay.Overlay mWayOverlay = null;
 
-    LinearLayout mNavInfoLayout = null;
+    LinearLayout mEndInfoLayout = null;
     TextView mEndInfo = null;
+
+    LinearLayout mRoutingInfoLayout = null;
+    TextView mRoutingInfo = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,11 +84,17 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mapView.setBuiltInZoomControls(false);
         mapView.setMultiTouchControls(true);
         mapView.setUseDataConnection(false);
-        mapView.setMaxZoomLevel(21);
+        mapView.setMaxZoomLevel(22);
+
+        // setup map event overlay.
+        MapEventsOverlay eventOverlay = new MapEventsOverlay(this, this);
+        mapView.getOverlays().add(0, eventOverlay);
 
         initMapResource();
 
-        initRoadManager();
+        if (null == mRoadManager) {
+            initRoadManager();
+        }
 //        testRouting();
 
         tryStartRoutingFromIntent();
@@ -88,6 +102,17 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
     @Override
     public boolean singleTapConfirmedHelper(GeoPoint p) {
+        // remove existing overlay first.
+        if (null != mEndOverlay) {
+            mapView.getOverlays().remove(mEndOverlay);
+        }
+
+        mEndOverlay = createMarkerOverlay2(p, R.drawable.dest);
+        mEndPoint.setValue(p.getLatitude(), p.getLongitude(), 6);
+
+        mEndInfo.setText("To: \n" + p.toString());
+        mEndInfoLayout.setVisibility(View.VISIBLE);
+
         return true;
     }
 
@@ -98,10 +123,15 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
     void initViewElements() {
         // hide nav info panel at first;
-        mNavInfoLayout = (LinearLayout) findViewById(R.id.navInfoLayout);
-        mNavInfoLayout.setVisibility(View.INVISIBLE);
+        mEndInfoLayout = (LinearLayout) findViewById(R.id.navInfoLayout);
+        mEndInfoLayout.setVisibility(View.INVISIBLE);
 
         mEndInfo = (TextView) findViewById(R.id.destInfoText);
+
+        mRoutingInfoLayout = (LinearLayout) findViewById(R.id.routingInfoLayout);
+        mRoutingInfoLayout.setVisibility(View.INVISIBLE);
+
+        mRoutingInfo = (TextView) findViewById(R.id.routingInfoText);
 
         // install button listener;
         Button searchBttn = (Button) findViewById(R.id.searchButton);
@@ -112,33 +142,15 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     }
 
     private void initMapResource() {
-        final ITileSource tileSource = new XYTileSource("GlodonMap", 15, 21, 256, ".png", null);
+        final ITileSource tileSource = new XYTileSource("GlodonMap", 19, 22, 256, ".png", null);
         MapTileModuleProviderBase tileModuleProvider = new MapTileFileArchiveProvider(
                 new SimpleRegisterReceiver(getApplicationContext()),
                 tileSource, null);
 
         MapTileProviderBase mapProvider = new MapTileProviderArray(tileSource, null,
                 new MapTileModuleProviderBase[] { tileModuleProvider });
-        final TilesOverlay tileOverlay = new TilesOverlay(mapProvider, getBaseContext());
-        mapView.getOverlays().add(tileOverlay);
 
-        class OverlayMapListener implements MapListener {
-            @Override
-            public boolean onScroll(ScrollEvent e) {
-                e.getSource().invalidate();
-
-                return true;
-            }
-
-            @Override
-            public boolean onZoom(ZoomEvent e) {
-//                e.getSource().invalidate();
-                mapView.invalidate();
-
-                return true;
-            }
-        }
-        mapView.setMapListener(new OverlayMapListener());
+        mapView.setTileProvider(mapProvider);
 
         IMapController mapViewController = mapView.getController();
         mapViewController.setZoom(19);
@@ -148,11 +160,17 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     private void initRoadManager() {
         String fileName = "osmdroid/Glodon_Outdoor.osm";// test.
         String path = Environment.getExternalStorageDirectory() + "/" + fileName;
-        OsmWaysParser ways_parser = new OsmWaysParser(path);
-        ArrayList<SimpleEdge3d> edgeList = ways_parser.GetRawWays();
-        assert edgeList != null;
+        OsmWaysParser osmParser = new OsmWaysParser(path);
 
-        mRoadManager = new com.shitu.routing.RoadManager(edgeList);
+        ArrayList<SimpleEdge3d> edgeList = osmParser.GetRawWays();
+        Assert.assertNotNull(edgeList);
+
+        ArrayList<Room> roomList = osmParser.GetRawRooms();
+        Assert.assertNotNull(roomList);
+
+        mRoadManager = new com.shitu.routing.RoadManager(edgeList, roomList);
+
+//        showAllRoads();
     }
 
     private void testRouting() {
@@ -222,7 +240,8 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mRoadManager.SetStartPoint(mStartPoint);
         mRoadManager.SetEndPoint(mEndPoint);
 
-        ArrayList<Point3d> way = mRoadManager.GetRoad().getPointList();
+        Point3dList road = mRoadManager.GetRoad();
+        ArrayList<Point3d> way = road.getPointList();
         if (way.isEmpty()) {
             return false;
         }
@@ -249,50 +268,43 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mWayOverlay = wayOverlay;
 
         // create start & end point overlay.
-        mStartOverlay = createMarkerOverlay(mStartPoint, R.drawable.start);
-        mEndOverlay = createMarkerOverlay(mEndPoint, R.drawable.dest);
+        mStartOverlay = createMarkerOverlay2(mStartPoint, R.drawable.start);
+        mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
+
+        // refresh info panel.
+        mRoutingInfo.setText("Room: " + mStartRoom + "\nDistance: " + (int)road.GetLength_GeoCoord() + "m away!");
+        mRoutingInfoLayout.setVisibility(View.VISIBLE);
 
         return true;
     }
 
     boolean getRoomLocation(int roomId, Point3d roomCoord) {
-        if (roomId == 603) {
-            roomCoord.setValue(40.0443256069883, 116.277749070418, 6);
-            return  true;
+        Assert.assertNotNull(mRoadManager);
+        Point3d pos = mRoadManager.GetRoomPosition(roomId);
+        if (null != pos) {
+            roomCoord.setValue(pos.Lat(), pos.Lon(), pos.Floor());
+            return true;
         }
         else {
             return false;
         }
     }
 
-    ItemizedIconOverlay<OverlayItem> createMarkerOverlay(Point3d pos, int markerId) {
-        GeoPoint geoPt = new GeoPoint(pos.Lat(), pos.Lon());
-        OverlayItem item = new OverlayItem("Marker", "it's a marker", geoPt);
+    org.osmdroid.views.overlay.Overlay createMarkerOverlay2(Point3d pos, int markerId) {
+        return createMarkerOverlay2(new GeoPoint(pos.Lat(), pos.Lon()), markerId);
+    }
 
-        Drawable marker = getResources().getDrawable(markerId);
-        item.setMarker(marker);
-
-        ArrayList<OverlayItem> itemArray = new ArrayList<>();
-        itemArray.add(item);
-
-        final ResourceProxy resProxy = new DefaultResourceProxyImpl(getApplicationContext());
-        ItemizedIconOverlay<OverlayItem> iconOverlay = new ItemizedIconOverlay<OverlayItem>(itemArray,
-                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
-                    public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-                        return true;
-                    }
-                    public boolean onItemLongPress(final int index, final OverlayItem item) {
-                        return true;
-                    }
-                }, resProxy);
-        mapView.getOverlays().add(iconOverlay);
-
-        mapView.getController().setZoom(20);
-        mapView.getController().setCenter(geoPt);
-
+    org.osmdroid.views.overlay.Overlay createMarkerOverlay2(GeoPoint pos, int markerId) {
+        Marker marker = new Marker(mapView);
+        marker.setPosition(pos);
+        marker.setIcon(getResources().getDrawable(markerId));
+        marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
+        marker.setTitle("Point Marker");
+        marker.setDraggable(false);
+        mapView.getOverlays().add(marker);
         mapView.invalidate();
 
-        return iconOverlay;
+        return marker;
     }
 
     void removeOverlay(org.osmdroid.views.overlay.Overlay overlay) {
@@ -301,7 +313,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     }
 
     void hideNavInfoLayout() {
-        mNavInfoLayout.setVisibility(View.INVISIBLE);
+        mEndInfoLayout.setVisibility(View.INVISIBLE);
     }
 
     Button.OnClickListener mSearchButtonListener = new Button.OnClickListener() {
@@ -317,16 +329,18 @@ public class MapActivity extends Activity implements MapEventsReceiver {
             }
 
             EditText text = (EditText)findViewById(R.id.searchText);
-            String roomText = text.getText().toString();
+            mStartRoom = text.getText().toString();
 
-            if (getRoomLocation(Integer.parseInt(roomText), mEndPoint)) {
-                mEndOverlay = createMarkerOverlay(mEndPoint, R.drawable.dest);
+            if (getRoomLocation(Integer.parseInt(mStartRoom), mEndPoint)) {
+                mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
+                mapView.getController().setCenter(new GeoPoint(mEndPoint.Lat(), mEndPoint.Lon()));
+                mapView.getController().setZoom(20);
 
-                mEndInfo.setText("Target: " + roomText);
-                mNavInfoLayout.setVisibility(View.VISIBLE);
+                mEndInfo.setText("Room: " + mStartRoom);
+                mEndInfoLayout.setVisibility(View.VISIBLE);
             }
             else {
-                Toast.makeText(getApplicationContext(), "Room #" + roomText + "# NOT FOUND!",
+                Toast.makeText(getApplicationContext(), "Room #" + mStartRoom + "# NOT FOUND!",
                         Toast.LENGTH_LONG).show();
             }
         }
@@ -337,20 +351,23 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         public void onClick(View v) {
             Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
             startActivity(intent);
+            finish();
         }
     };
 
     @Override
     public void onBackPressed() {
         // just chose the destination point.
-        if (mNavInfoLayout.getVisibility() == View.VISIBLE) {
-            hideNavInfoLayout();
+        if (mEndInfoLayout.getVisibility() == View.VISIBLE) {
+            mEndInfoLayout.setVisibility(View.INVISIBLE);
 
             removeOverlay(mEndOverlay);
             mEndOverlay = null;
         }
         // showing the route.
-        else if (null != mWayOverlay) {
+        else if (mRoutingInfoLayout.getVisibility() == View.VISIBLE) {
+            mRoutingInfoLayout.setVisibility(View.INVISIBLE);
+
             removeOverlay(mWayOverlay);
             mWayOverlay = null;
 
@@ -364,5 +381,39 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         else {
             super.onBackPressed();
         }
+    }
+
+    public void showAllRoads() {
+
+        ArrayList<Edge3d> edgeList = mRoadManager.getEdgeList();
+
+        int count = 0;
+        ArrayList<GeoPoint> geoPtArray = new ArrayList<>();
+        for (Edge3d e : edgeList) {
+            geoPtArray.clear();
+
+            Point3d startPt = e.getStartPt();
+            geoPtArray.add(new GeoPoint(startPt.Lat(), startPt.Lon()));
+
+            Point3d endPt = e.getEndPt();
+            geoPtArray.add(new GeoPoint(endPt.Lat(), endPt.Lon()));
+
+            Polyline wayOverlay = new Polyline(this);
+            wayOverlay.setPoints(geoPtArray);
+            wayOverlay.setColor(0xfffb0000);
+            wayOverlay.setWidth(4.0f);
+            mapView.getOverlays().add(wayOverlay);
+
+//            if (++count >= 50) break;
+        }
+
+        // create osm route overlay.
+//        Polyline wayOverlay = new Polyline(this);
+//        wayOverlay.setPoints(geoPtArray);
+//        wayOverlay.setColor(0xfffb0000);
+//        wayOverlay.setWidth(4.0f);
+//
+//        mapView.getOverlays().add(wayOverlay);
+        mapView.invalidate();
     }
 }
