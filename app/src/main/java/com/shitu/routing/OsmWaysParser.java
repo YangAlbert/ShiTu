@@ -191,7 +191,7 @@ public class OsmWaysParser {
 
                 xmlSerializer.startTag("", "tag");
                 xmlSerializer.attribute("", "k", "highway");
-                xmlSerializer.attribute("", "v", "footway");
+                xmlSerializer.attribute("", "v", "indoor");
                 xmlSerializer.endTag("", "tag");
 
                 xmlSerializer.endTag("", "way");
@@ -297,7 +297,7 @@ public class OsmWaysParser {
                         else if (parser.getName().equalsIgnoreCase("way") && currentWay != null) {
                             if (currentWay.key != null && currentWay.value != null) {
                                 if (currentWay.key.equalsIgnoreCase("highway") &&
-                                        currentWay.value.equalsIgnoreCase("footway")) {
+                                        currentWay.value.equalsIgnoreCase("indoor")) {
                                     for (int i = 1; i < currentWay.nds.size(); i++) {
                                         long start_node_id = Long.parseLong(currentWay.nds.get(i - 1).toString());
                                         long end_node_id = Long.parseLong(currentWay.nds.get(i).toString());
