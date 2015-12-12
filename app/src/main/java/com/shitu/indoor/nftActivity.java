@@ -62,10 +62,29 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
 
     private Orientation orientationSensor;
 
-    public void arCallback(String markerName)
-    {
-        markerName.replace("-", "");
+    static nftActivity mInstance = null;
+    static int mRoomNumber = -1;
+
+    public static void arCallback(String markerName) {
+        markerName = markerName.replace("-", "");
         Log.d("Room Number", markerName);
+
+        try {
+            if (!markerName.isEmpty()) {
+                int roomId = Integer.parseInt(markerName);
+                if (roomId != mRoomNumber) {
+                    Intent mapActivity = new Intent(mInstance.getApplicationContext(), MapActivity.class);
+                    mapActivity.putExtra(MapActivity.ROOM_NUMBER_TOKEN, roomId);
+
+                    mInstance.startActivity(mapActivity);
+                    mInstance.finish();
+
+                    mRoomNumber = roomId;
+                }
+            }
+        } catch (NumberFormatException e) {
+            Log.e("ShiTu", "Invalid Room Number: " + markerName);
+        }
     }
 
     /** Called when the activity is first created. */
@@ -73,6 +92,8 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        mInstance = this;
 
         orientationSensor = new Orientation(this.getApplicationContext(), this);
 
@@ -180,19 +201,19 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
 
     @Override
     public void orientation(Double AZIMUTH, Double PITCH, Double ROLL) {
-        try {
-            if (!activeMarkerName.isEmpty()) {
-                int roomId = Integer.parseInt(activeMarkerName);
-
-                Intent mapActivity = new Intent(getApplicationContext(), MapActivity.class);
-                mapActivity.putExtra(MapActivity.ROOM_NUMBER_TOKEN, roomId);
-                startActivity(mapActivity);
-
-                finish();
-            }
-        } catch (NumberFormatException e) {
-            Log.e("ShiTu", "Invalid Room Number: " + activeMarkerName);
-        }
+//        try {
+//            if (!activeMarkerName.isEmpty()) {
+//                int roomId = Integer.parseInt(activeMarkerName);
+//
+//                Intent mapActivity = new Intent(getApplicationContext(), MapActivity.class);
+//                mapActivity.putExtra(MapActivity.ROOM_NUMBER_TOKEN, roomId);
+//                startActivity(mapActivity);
+//
+//                finish();
+//            }
+//        } catch (NumberFormatException e) {
+//            Log.e("ShiTu", "Invalid Room Number: " + activeMarkerName);
+//        }
     }
 
     private void updateNativeDisplayParameters()

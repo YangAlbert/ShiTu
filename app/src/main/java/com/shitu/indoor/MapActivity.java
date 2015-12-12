@@ -405,8 +405,8 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     Button.OnClickListener mNavButtonListener = new Button.OnClickListener() {
         @Override
         public void onClick(View v) {
-            Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
-//            Intent intent = new Intent(getApplicationContext(), nftActivity.class);
+//            Intent intent = new Intent(getApplicationContext(), CameraActivity.class);
+            Intent intent = new Intent(getApplicationContext(), nftActivity.class);
             startActivity(intent);
             finish();
         }
