@@ -10,6 +10,7 @@
 #include <AR/arFilterTransMat.h>
 #include <AR2/tracking.h>
 #include <AR/arosg.h>
+#include <string.h>
 
 #include "ARMarkerNFT.h"
 #include "trackingSub.h"
@@ -59,6 +60,7 @@ enum viewPortIndices {
 #define JNIFUNCTION_NATIVE(sig) Java_com_shitu_indoor_nftActivity_##sig
 
 extern "C" {
+    JNIEXPORT jstring JNICALL JNIFUNCTION_NATIVE(nativeGetCurMarkerName(JNIEnv *, jclass));
 	JNIEXPORT jboolean JNICALL JNIFUNCTION_NATIVE(nativeCreate(JNIEnv* env, jobject object, jobject instanceOfAndroidContext));
 	JNIEXPORT jboolean JNICALL JNIFUNCTION_NATIVE(nativeStart(JNIEnv* env, jobject object));
 	JNIEXPORT jboolean JNICALL JNIFUNCTION_NATIVE(nativeStop(JNIEnv* env, jobject object));
@@ -138,6 +140,34 @@ static bool gContentFlipH = false;
 // Network.
 static int gInternetState = -1;
 
+
+// Marker name.
+JNIEXPORT jstring JNICALL JNIFUNCTION_NATIVE(nativeGetCurMarkerName(JNIEnv * env, jclass))
+{
+    char buf[16] = {0};
+    if(markersNFT)
+    {
+        for(int i = 0; i < markersNFTCount; i++)
+        {
+            ARMarkerNFT* curMarker = &markersNFT[i];
+            if(FALSE == curMarker->valid) {
+                continue;
+            }
+            char* mn = curMarker->datasetPathname;
+            int nameIndex = strlen(mn) - 1;
+            while(nameIndex >= 0)
+            {
+                if('/' == mn[nameIndex])
+                {
+                    break;
+                }
+                nameIndex--;
+            }
+            strcat(buf, mn + nameIndex + 1);
+        }
+    }
+    return env->NewStringUTF(buf);
+}
 
 //
 // Lifecycle functions.
