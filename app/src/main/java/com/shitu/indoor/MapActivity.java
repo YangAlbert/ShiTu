@@ -26,12 +26,10 @@ import junit.framework.Assert;
 import org.osmdroid.DefaultResourceProxyImpl;
 import org.osmdroid.ResourceProxy;
 import org.osmdroid.api.IMapController;
+import org.osmdroid.bonuspack.overlays.MapEventsOverlay;
 import org.osmdroid.bonuspack.overlays.MapEventsReceiver;
 import org.osmdroid.bonuspack.overlays.Marker;
 import org.osmdroid.bonuspack.overlays.Polyline;
-import org.osmdroid.events.MapListener;
-import org.osmdroid.events.ScrollEvent;
-import org.osmdroid.events.ZoomEvent;
 import org.osmdroid.tileprovider.MapTileProviderArray;
 import org.osmdroid.tileprovider.MapTileProviderBase;
 import org.osmdroid.tileprovider.modules.MapTileFileArchiveProvider;
@@ -43,11 +41,10 @@ import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.ItemizedIconOverlay;
 import org.osmdroid.views.overlay.OverlayItem;
-import org.osmdroid.views.overlay.TilesOverlay;
 
 import java.util.ArrayList;
 
-public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
+public class MapActivity extends Activity implements MapEventsReceiver {
 
     public static final GeoPoint GLODON = new GeoPoint(40.044771, 116.277071);
 
@@ -69,7 +66,7 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
 
     org.osmdroid.views.overlay.Overlay mWayOverlay = null;
 
-    LinearLayout mNavInfoLayout = null;
+    LinearLayout mEndInfoLayout = null;
     TextView mEndInfo = null;
 
     LinearLayout mRoutingInfoLayout = null;
@@ -89,6 +86,10 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
         mapView.setUseDataConnection(false);
         mapView.setMaxZoomLevel(22);
 
+        // setup map event overlay.
+        MapEventsOverlay eventOverlay = new MapEventsOverlay(this, this);
+        mapView.getOverlays().add(0, eventOverlay);
+
         initMapResource();
 
         if (null == mRoadManager) {
@@ -99,22 +100,31 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
         tryStartRoutingFromIntent();
     }
 
-//    @Override
-//    public boolean singleTapConfirmedHelper(GeoPoint p) {
-//        mapView.requestLayout();
-//        mapView.invalidate();
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean longPressHelper(GeoPoint p) {
-//        return true;
-//    }
+    @Override
+    public boolean singleTapConfirmedHelper(GeoPoint p) {
+        // remove existing overlay first.
+        if (null != mEndOverlay) {
+            mapView.getOverlays().remove(mEndOverlay);
+        }
+
+        mEndOverlay = createMarkerOverlay2(p, R.drawable.dest);
+        mEndPoint.setValue(p.getLatitude(), p.getLongitude(), 6);
+
+        mEndInfo.setText("To: \n" + p.toString());
+        mEndInfoLayout.setVisibility(View.VISIBLE);
+
+        return true;
+    }
+
+    @Override
+    public boolean longPressHelper(GeoPoint p) {
+        return true;
+    }
 
     void initViewElements() {
         // hide nav info panel at first;
-        mNavInfoLayout = (LinearLayout) findViewById(R.id.navInfoLayout);
-        mNavInfoLayout.setVisibility(View.INVISIBLE);
+        mEndInfoLayout = (LinearLayout) findViewById(R.id.navInfoLayout);
+        mEndInfoLayout.setVisibility(View.INVISIBLE);
 
         mEndInfo = (TextView) findViewById(R.id.destInfoText);
 
@@ -160,7 +170,7 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
 
         mRoadManager = new com.shitu.routing.RoadManager(edgeList, roomList);
 
-        showAllRoads();
+//        showAllRoads();
     }
 
     private void testRouting() {
@@ -281,8 +291,12 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
     }
 
     org.osmdroid.views.overlay.Overlay createMarkerOverlay2(Point3d pos, int markerId) {
+        return createMarkerOverlay2(new GeoPoint(pos.Lat(), pos.Lon()), markerId);
+    }
+
+    org.osmdroid.views.overlay.Overlay createMarkerOverlay2(GeoPoint pos, int markerId) {
         Marker marker = new Marker(mapView);
-        marker.setPosition(new GeoPoint(pos.Lat(), pos.Lon()));
+        marker.setPosition(pos);
         marker.setIcon(getResources().getDrawable(markerId));
         marker.setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_CENTER);
         marker.setTitle("Point Marker");
@@ -293,43 +307,13 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
         return marker;
     }
 
-//    ItemizedIconOverlay<OverlayItem> createMarkerOverlay(Point3d pos, int markerId) {
-//        GeoPoint geoPt = new GeoPoint(pos.Lat(), pos.Lon());
-//        OverlayItem item = new OverlayItem("Marker", "it's a marker", geoPt);
-//
-//        Drawable marker = getResources().getDrawable(markerId);
-//        item.setMarker(marker);
-//
-//        ArrayList<OverlayItem> itemArray = new ArrayList<>();
-//        itemArray.add(item);
-//
-//        final ResourceProxy resProxy = new DefaultResourceProxyImpl(getApplicationContext());
-//        ItemizedIconOverlay<OverlayItem> iconOverlay = new ItemizedIconOverlay<OverlayItem>(itemArray,
-//                new ItemizedIconOverlay.OnItemGestureListener<OverlayItem>() {
-//                    public boolean onItemSingleTapUp(final int index, final OverlayItem item) {
-//                        return true;
-//                    }
-//                    public boolean onItemLongPress(final int index, final OverlayItem item) {
-//                        return true;
-//                    }
-//                }, resProxy);
-//        mapView.getOverlays().add(iconOverlay);
-//
-//        mapView.getController().setZoom(20);
-//        mapView.getController().setCenter(geoPt);
-//
-//        mapView.invalidate();
-//
-//        return iconOverlay;
-//    }
-
     void removeOverlay(org.osmdroid.views.overlay.Overlay overlay) {
         mapView.getOverlays().remove(overlay);
         mapView.invalidate();
     }
 
     void hideNavInfoLayout() {
-        mNavInfoLayout.setVisibility(View.INVISIBLE);
+        mEndInfoLayout.setVisibility(View.INVISIBLE);
     }
 
     Button.OnClickListener mSearchButtonListener = new Button.OnClickListener() {
@@ -353,7 +337,7 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
                 mapView.getController().setZoom(20);
 
                 mEndInfo.setText("Room: " + mStartRoom);
-                mNavInfoLayout.setVisibility(View.VISIBLE);
+                mEndInfoLayout.setVisibility(View.VISIBLE);
             }
             else {
                 Toast.makeText(getApplicationContext(), "Room #" + mStartRoom + "# NOT FOUND!",
@@ -374,8 +358,8 @@ public class MapActivity extends Activity/* implements MapEventsReceiver*/ {
     @Override
     public void onBackPressed() {
         // just chose the destination point.
-        if (mNavInfoLayout.getVisibility() == View.VISIBLE) {
-            mNavInfoLayout.setVisibility(View.INVISIBLE);
+        if (mEndInfoLayout.getVisibility() == View.VISIBLE) {
+            mEndInfoLayout.setVisibility(View.INVISIBLE);
 
             removeOverlay(mEndOverlay);
             mEndOverlay = null;
