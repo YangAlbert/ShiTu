@@ -28,6 +28,9 @@
         <activity android:name=".nftActivity"
             android:theme="@android:style/Theme.NoTitleBar">
         </activity>
+        <activity android:name=".CameraActivity"
+            android:theme="@android:style/Theme.NoTitleBar">
+        </activity>
     </application>
 
 </manifest>

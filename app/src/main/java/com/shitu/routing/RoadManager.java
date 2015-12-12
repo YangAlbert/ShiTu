@@ -377,7 +377,7 @@ public class RoadManager  {
     private ArrayList<Point3d> CalcShortestPath()
     {
         NodePoint3d currentNode = endNode;
-        ArrayList<Point3d> ptList = new ArrayList<Point3d>(100);
+        ArrayList<Point3d> ptList = new ArrayList<Point3d>(500);
         ptList.add(currentNode.pt);
 
         int k = 0;

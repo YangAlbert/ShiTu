@@ -625,8 +625,8 @@ JNIEXPORT void JNICALL JNIFUNCTION_NATIVE(nativeVideoFrame(JNIEnv* env, jobject 
 
             jstring jstr = getCurMarkerName(env, markersNFT[i]);
             jclass clazz = env->FindClass("com/shitu/indoor/nftActivity");
-            jmethodID arCallback = env->GetMethodID(clazz, "arCallback", "(Ljava/lang/String;)Ljava/lang/String;");
-            jobject result = env->CallObjectMethod(obj, arCallback, jstr);
+            jmethodID arCallback = env->GetStaticMethodID(clazz, "arCallback", "(Ljava/lang/String;)V");
+            env->CallStaticVoidMethod(clazz, arCallback, jstr);
             
         } else {
             
