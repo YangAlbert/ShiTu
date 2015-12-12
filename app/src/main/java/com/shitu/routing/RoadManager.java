@@ -2,6 +2,7 @@ package com.shitu.routing;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 
 /**
@@ -19,11 +20,19 @@ public class RoadManager  {
     private ArrayList<NodePoint3d> nodePts;
     private ArrayList<Room> mRoomList;
 
+    HashMap<String, ArrayList<Room> > mPOIMap = new HashMap<>();
+
+    public static final String POI_TOILET = "toilet";
+    public static final String POI_STAIR = "stair";
+    public static final String POI_LIFT = "lift";
+
     public RoadManager(ArrayList<SimpleEdge3d> simpleEdges, ArrayList<Room> roomList)
     {
         edgeList = GetEdgeList(simpleEdges);
         mRoomList = GetRoomList(roomList);
         nodePts = GetNodePoints();
+
+        initPoiMap();
     }
 
     public ArrayList<Edge3d> getEdgeList() {
@@ -79,6 +88,46 @@ public class RoadManager  {
             numbers.add(mRoomList.get(i).number);
         }
         return numbers;
+    }
+
+    public boolean hasPoi(String key) {
+        return mPOIMap.containsKey(key);
+    }
+
+    public ArrayList<Room> getPoiList(String key) {
+        return mPOIMap.get(key);
+    }
+
+    private void initPoiMap() {
+        for (Room r : mRoomList) {
+            int poiNum = r.number / 10;
+            String key;
+            switch (poiNum) {
+                case 600:
+                    safeGetPoiList("toilet").add(r);
+                    break;
+
+                case 601:
+                    safeGetPoiList("stair").add(r);
+                    break;
+
+                case 602:
+                    safeGetPoiList("lift").add(r);
+                    break;
+
+                default:
+                    // non poi room, skip.
+                    break;
+            }
+        }
+    }
+
+    private ArrayList<Room> safeGetPoiList(String key) {
+        if (!mPOIMap.containsKey(key)) {
+            mPOIMap.put(key, new ArrayList<Room>());
+        }
+
+        return mPOIMap.get(key);
     }
 
     //Refresh node time

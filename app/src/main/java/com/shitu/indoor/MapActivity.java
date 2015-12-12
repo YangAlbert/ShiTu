@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.os.Environment;
+import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
@@ -65,6 +66,7 @@ public class MapActivity extends Activity implements MapEventsReceiver {
     static Point3d mEndPoint = new Point3d();
 
     org.osmdroid.views.overlay.Overlay mWayOverlay = null;
+    ArrayList<org.osmdroid.views.overlay.Overlay> mPOIOverlay = new ArrayList<>();
 
     LinearLayout mEndInfoLayout = null;
     TextView mEndInfo = null;
@@ -307,6 +309,17 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         return marker;
     }
 
+    void createPoiOverlay(ArrayList<Room> poiArray) {
+        // remove all previous overlays.
+        mapView.getOverlays().removeAll(mPOIOverlay);
+        mPOIOverlay.clear();
+
+        for (Room r : poiArray) {
+            org.osmdroid.views.overlay.Overlay poiOverlay = createMarkerOverlay2(r.pt, R.drawable.marker_poi_cluster);
+            mPOIOverlay.add(poiOverlay);
+        }
+    }
+
     void removeOverlay(org.osmdroid.views.overlay.Overlay overlay) {
         mapView.getOverlays().remove(overlay);
         mapView.invalidate();
@@ -324,24 +337,38 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
             // remove previously created destination mark.
             if (null != mEndOverlay) {
-                removeOverlay(mEndOverlay);
+//                removeOverlay(mEndOverlay);
+                mapView.getOverlays().remove(mEndOverlay);
                 mEndOverlay = null;
             }
+            mapView.getOverlays().removeAll(mPOIOverlay);
+            mPOIOverlay.clear();
 
             EditText text = (EditText)findViewById(R.id.searchText);
             mStartRoom = text.getText().toString();
+            try {
+                // first check if input field is a poi.
+                if (mRoadManager.hasPoi(mStartRoom)) {
+                    createPoiOverlay(mRoadManager.getPoiList(mStartRoom));
+                }
+                // then check if it matches a room.
+                else if (getRoomLocation(Integer.parseInt(mStartRoom), mEndPoint)) {
+                    // clear
+                    mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
+                    mapView.getController().setCenter(new GeoPoint(mEndPoint.Lat(), mEndPoint.Lon()));
+                    mapView.getController().setZoom(20);
 
-            if (getRoomLocation(Integer.parseInt(mStartRoom), mEndPoint)) {
-                mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
-                mapView.getController().setCenter(new GeoPoint(mEndPoint.Lat(), mEndPoint.Lon()));
-                mapView.getController().setZoom(20);
-
-                mEndInfo.setText("Room: " + mStartRoom);
-                mEndInfoLayout.setVisibility(View.VISIBLE);
-            }
-            else {
-                Toast.makeText(getApplicationContext(), "Room #" + mStartRoom + "# NOT FOUND!",
-                        Toast.LENGTH_LONG).show();
+                    mEndInfo.setText("Room: " + mStartRoom);
+                    mEndInfoLayout.setVisibility(View.VISIBLE);
+                }
+                // at last, report nothing was find.
+                else {
+                    Toast.makeText(getApplicationContext(), "Room #" + mStartRoom + "# NOT FOUND!",
+                            Toast.LENGTH_LONG).show();
+                }
+            } catch (NumberFormatException e) {
+                Toast.makeText(getApplicationContext(), "Input string is illegal!", Toast.LENGTH_SHORT).show();
+                Log.e("ShiTu", e.toString());
             }
         }
     };
