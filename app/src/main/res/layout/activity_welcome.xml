@@ -13,7 +13,7 @@
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:id="@+id/welcome_imageView"
-        android:src="@drawable/shitu_welcome"
+        android:src="@drawable/shitu_welcome_2"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:adjustViewBounds="true"
