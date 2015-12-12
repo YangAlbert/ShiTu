@@ -18,12 +18,12 @@
         android:layout_alignParentTop="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
-        android:background="#80f5f4f4">
+        android:background="#a0f5f4f4">
 
         <EditText
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:inputType="number"
+            android:inputType="text"
             android:ems="10"
             android:id="@+id/searchText" />
 
@@ -57,7 +57,8 @@
             android:layout_weight="0.25"
             android:gravity="center_vertical"
             android:text="text"
-            android:textSize="24dp" />
+            android:textSize="24dp"
+            android:textColor="#404040" />
 
         <Space
             android:layout_width="wrap_content"
@@ -86,7 +87,8 @@
             android:layout_height="59dp"
             android:text="New Text"
             android:id="@+id/routingInfoText"
-            android:textSize="18dp" />
+            android:textSize="18dp"
+            android:textColor="#404040" />
     </LinearLayout>
 
 </RelativeLayout>

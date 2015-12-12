@@ -1,58 +1,3 @@
-/*
- *  nftBook.cpp
- *  ARToolKit for Android
- *
- *  An NFT example with all ARToolKit setup performed in native code,
- *  and with OpenSceneGraph rendering of models.
- *
- *  Disclaimer: IMPORTANT:  This Daqri software is supplied to you by Daqri
- *  LLC ("Daqri") in consideration of your agreement to the following
- *  terms, and your use, installation, modification or redistribution of
- *  this Daqri software constitutes acceptance of these terms.  If you do
- *  not agree with these terms, please do not use, install, modify or
- *  redistribute this Daqri software.
- *
- *  In consideration of your agreement to abide by the following terms, and
- *  subject to these terms, Daqri grants you a personal, non-exclusive
- *  license, under Daqri's copyrights in this original Daqri software (the
- *  "Daqri Software"), to use, reproduce, modify and redistribute the Daqri
- *  Software, with or without modifications, in source and/or binary forms;
- *  provided that if you redistribute the Daqri Software in its entirety and
- *  without modifications, you must retain this notice and the following
- *  text and disclaimers in all such redistributions of the Daqri Software.
- *  Neither the name, trademarks, service marks or logos of Daqri LLC may
- *  be used to endorse or promote products derived from the Daqri Software
- *  without specific prior written permission from Daqri.  Except as
- *  expressly stated in this notice, no other rights or licenses, express or
- *  implied, are granted by Daqri herein, including but not limited to any
- *  patent rights that may be infringed by your derivative works or by other
- *  works in which the Daqri Software may be incorporated.
- *
- *  The Daqri Software is provided by Daqri on an "AS IS" basis.  DAQRI
- *  MAKES NO WARRANTIES, EXPRESS OR IMPLIED, INCLUDING WITHOUT LIMITATION
- *  THE IMPLIED WARRANTIES OF NON-INFRINGEMENT, MERCHANTABILITY AND FITNESS
- *  FOR A PARTICULAR PURPOSE, REGARDING THE DAQRI SOFTWARE OR ITS USE AND
- *  OPERATION ALONE OR IN COMBINATION WITH YOUR PRODUCTS.
- *
- *  IN NO EVENT SHALL DAQRI BE LIABLE FOR ANY SPECIAL, INDIRECT, INCIDENTAL
- *  OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- *  SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- *  INTERRUPTION) ARISING IN ANY WAY OUT OF THE USE, REPRODUCTION,
- *  MODIFICATION AND/OR DISTRIBUTION OF THE DAQRI SOFTWARE, HOWEVER CAUSED
- *  AND WHETHER UNDER THEORY OF CONTRACT, TORT (INCLUDING NEGLIGENCE),
- *  STRICT LIABILITY OR OTHERWISE, EVEN IF DAQRI HAS BEEN ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- *
- *  Copyright 2015 Daqri LLC. All Rights Reserved.
- *  Copyright 2011-2015 ARToolworks, Inc. All Rights Reserved.
- *
- *  Author(s): Philip Lamb
- *
- */
-
-// ============================================================================
-//	Includes
-// ============================================================================
 
 #include <jni.h>
 #include <android/log.h>
@@ -65,15 +10,12 @@
 #include <AR/arFilterTransMat.h>
 #include <AR2/tracking.h>
 #include <AR/arosg.h>
+#include <string.h>
 
 #include "ARMarkerNFT.h"
 #include "trackingSub.h"
 #include "VirtualEnvironment.h"
 #include "osgPlugins.h"
-
-// ============================================================================
-//	Types
-// ============================================================================
 
 typedef enum {
     ARViewContentModeScaleToFill,
@@ -98,10 +40,6 @@ enum viewPortIndices {
     viewPortIndexHeight
 };
 
-// ============================================================================
-//	Constants
-// ============================================================================
-
 #define PAGES_MAX               10          // Maximum number of pages expected. You can change this down (to save memory) or up (to accomodate more pages.)
 
 #ifndef MAX
@@ -112,15 +50,11 @@ enum viewPortIndices {
 #endif
 
 // Logging macros
-#define  LOG_TAG    "nftBookNative"
+#define  LOG_TAG    "nftKit"
 #define  LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,LOG_TAG,__VA_ARGS__)
 #define  LOGI(...)  __android_log_print(ANDROID_LOG_INFO,LOG_TAG,__VA_ARGS__)
 #define  LOGW(...)  __android_log_print(ANDROID_LOG_WARN,LOG_TAG,__VA_ARGS__)
 #define  LOGE(...)  __android_log_print(ANDROID_LOG_ERROR,LOG_TAG,__VA_ARGS__)
-
-// ============================================================================
-//	Function prototypes.
-// ============================================================================
 
 // Utility preprocessor directive so only one change needed if Java class name changes
 #define JNIFUNCTION_NATIVE(sig) Java_com_shitu_indoor_nftActivity_##sig
@@ -142,10 +76,6 @@ extern "C" {
 static void nativeVideoGetCparamCallback(const ARParam *cparam, void *userdata);
 static void *loadNFTDataAsync(THREAD_HANDLE_T *threadHandle);
 static int initNFT(ARParamLT *cparamLT, AR_PIXEL_FORMAT pixFormat);
-
-// ============================================================================
-//	Global variables
-// ============================================================================
 
 // Preferences.
 static const char *cparaName = "Data/camera_para.dat";				///< Camera parameters file
@@ -210,9 +140,25 @@ static bool gContentFlipH = false;
 static int gInternetState = -1;
 
 
-// ============================================================================
-//	Functions
-// ============================================================================
+// Marker name.
+jstring getCurMarkerName(JNIEnv * env, ARMarkerNFT& curMarker)
+{
+    char buf[16] = {0};
+    if(TRUE == curMarker.valid) {
+        const char* mn = curMarker.datasetPathname;
+        int nameIndex = strlen(mn) - 1;
+        while(nameIndex >= 0)
+        {
+            if('/' == mn[nameIndex])
+            {
+                break;
+            }
+            nameIndex--;
+        }
+        strcat(buf, mn + nameIndex + 1);
+    }
+    return env->NewStringUTF(buf);
+}
 
 //
 // Lifecycle functions.
@@ -676,6 +622,11 @@ JNIEXPORT void JNICALL JNIFUNCTION_NATIVE(nativeVideoFrame(JNIEnv* env, jobject 
             arglCameraViewRHf(markersNFT[i].trans, markersNFT[i].pose.T, 1.0f /*VIEW_SCALEFACTOR*/);
             // Tell any dependent objects about the update.
             VirtualEnvironmentHandleARMarkerWasUpdated(i, markersNFT[i].pose);
+
+            jstring jstr = getCurMarkerName(env, markersNFT[i]);
+            jclass clazz = env->FindClass("com/shitu/indoor/nftActivity");
+            jmethodID arCallback = env->GetMethodID(clazz, "arCallback", "(Ljava/lang/String;)Ljava/lang/String;");
+            jobject result = env->CallObjectMethod(obj, arCallback, jstr);
             
         } else {
             
