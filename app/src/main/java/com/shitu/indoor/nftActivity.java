@@ -55,8 +55,6 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
     public static native void nativeDisplayParametersChanged(int orientation, int w, int h, int dpi); // 0 = portrait, 1 = landscape (device rotated 90 degrees ccw), 2 = portrait upside down, 3 = landscape reverse (device rotated 90 degrees cw).
     public static native void nativeSetInternetState(int state);
 
-    private static native String nativeGetCurMarkerName();
-
     private GLSurfaceView glView;
     private CameraSurface camSurface;
 
@@ -64,11 +62,10 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
 
     private Orientation orientationSensor;
 
-    private String getCurMarkerName()
+    public void arCallback(String markerName)
     {
-        String name = nativeGetCurMarkerName();
-        name.replace("-", "");
-        return name;
+        markerName.replace("-", "");
+        Log.d("Room Number", markerName);
     }
 
     /** Called when the activity is first created. */
@@ -183,8 +180,6 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
 
     @Override
     public void orientation(Double AZIMUTH, Double PITCH, Double ROLL) {
-        String activeMarkerName = getCurMarkerName();
-        Log.d("Room Number", activeMarkerName);
         try {
             if (!activeMarkerName.isEmpty()) {
                 int roomId = Integer.parseInt(activeMarkerName);

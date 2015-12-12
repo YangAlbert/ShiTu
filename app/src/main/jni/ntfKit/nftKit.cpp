@@ -60,7 +60,6 @@ enum viewPortIndices {
 #define JNIFUNCTION_NATIVE(sig) Java_com_shitu_indoor_nftActivity_##sig
 
 extern "C" {
-    JNIEXPORT jstring JNICALL JNIFUNCTION_NATIVE(nativeGetCurMarkerName(JNIEnv *, jclass));
 	JNIEXPORT jboolean JNICALL JNIFUNCTION_NATIVE(nativeCreate(JNIEnv* env, jobject object, jobject instanceOfAndroidContext));
 	JNIEXPORT jboolean JNICALL JNIFUNCTION_NATIVE(nativeStart(JNIEnv* env, jobject object));
 	JNIEXPORT jboolean JNICALL JNIFUNCTION_NATIVE(nativeStop(JNIEnv* env, jobject object));
@@ -142,29 +141,21 @@ static int gInternetState = -1;
 
 
 // Marker name.
-JNIEXPORT jstring JNICALL JNIFUNCTION_NATIVE(nativeGetCurMarkerName(JNIEnv * env, jclass))
+jstring getCurMarkerName(JNIEnv * env, ARMarkerNFT& curMarker)
 {
     char buf[16] = {0};
-    if(markersNFT)
-    {
-        for(int i = 0; i < markersNFTCount; i++)
+    if(TRUE == curMarker.valid) {
+        const char* mn = curMarker.datasetPathname;
+        int nameIndex = strlen(mn) - 1;
+        while(nameIndex >= 0)
         {
-            ARMarkerNFT* curMarker = &markersNFT[i];
-            if(FALSE == curMarker->valid) {
-                continue;
-            }
-            char* mn = curMarker->datasetPathname;
-            int nameIndex = strlen(mn) - 1;
-            while(nameIndex >= 0)
+            if('/' == mn[nameIndex])
             {
-                if('/' == mn[nameIndex])
-                {
-                    break;
-                }
-                nameIndex--;
+                break;
             }
-            strcat(buf, mn + nameIndex + 1);
+            nameIndex--;
         }
+        strcat(buf, mn + nameIndex + 1);
     }
     return env->NewStringUTF(buf);
 }
@@ -631,6 +622,11 @@ JNIEXPORT void JNICALL JNIFUNCTION_NATIVE(nativeVideoFrame(JNIEnv* env, jobject 
             arglCameraViewRHf(markersNFT[i].trans, markersNFT[i].pose.T, 1.0f /*VIEW_SCALEFACTOR*/);
             // Tell any dependent objects about the update.
             VirtualEnvironmentHandleARMarkerWasUpdated(i, markersNFT[i].pose);
+
+            jstring jstr = getCurMarkerName(env, markersNFT[i]);
+            jclass clazz = env->FindClass("com/shitu/indoor/nftActivity");
+            jmethodID arCallback = env->GetMethodID(clazz, "arCallback", "(Ljava/lang/String;)Ljava/lang/String;");
+            jobject result = env->CallObjectMethod(obj, arCallback, jstr);
             
         } else {
             
