@@ -104,14 +104,16 @@ public class MapActivity extends Activity implements MapEventsReceiver {
 
     @Override
     public boolean singleTapConfirmedHelper(GeoPoint p) {
-        // remove existing overlay first.
-        clearOverlays();
+        if (mWayOverlay == null) {
+            // remove existing overlay first.
+            clearOverlays();
 
-        mEndOverlay = createMarkerOverlay2(p, R.drawable.dest);
-        mEndPoint.setValue(p.getLatitude(), p.getLongitude(), 6);
+            mEndOverlay = createMarkerOverlay2(p, R.drawable.dest);
+            mEndPoint.setValue(p.getLatitude(), p.getLongitude(), 6);
 
-        mEndInfo.setText("To: \n" + p.toString());
-        mEndInfoLayout.setVisibility(View.VISIBLE);
+            mEndInfo.setText("To: \n" + p.toString());
+            mEndInfoLayout.setVisibility(View.VISIBLE);
+        }
 
         return true;
     }
@@ -244,19 +246,29 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         mRoadManager.SetStartPoint(mStartPoint);
         mRoadManager.SetEndPoint(mEndPoint);
 
-        Point3dList road = mRoadManager.GetRoad();
-        ArrayList<Point3d> way = road.getPointList();
-        if (way.isEmpty()) {
-            return false;
-        }
-
         // create osm:GeoPoint list.
         ArrayList<GeoPoint> ptArray = new ArrayList<>();
 
         // put start pt.
         ptArray.add(new GeoPoint(mStartPoint.Lat(), mStartPoint.Lon()));
-        for (Point3d p : way) {
-            ptArray.add(new GeoPoint(p.Lat(), p.Lon()));
+
+        try {
+            Point3dList road = mRoadManager.GetRoad();
+            ArrayList<Point3d> way = road.getPointList();
+            if (way.isEmpty()) {
+                return false;
+            }
+
+            for (Point3d p : way) {
+                ptArray.add(new GeoPoint(p.Lat(), p.Lon()));
+            }
+
+            // refresh info panel.
+            mRoutingInfo.setText("Room: " + mStartRoom + "\nDistance: " + (int)road.GetLength_GeoCoord() + "m away!");
+            mRoutingInfoLayout.setVisibility(View.VISIBLE);
+        } catch (OutOfMemoryError e) {
+            Log.e("ShiTu", e.toString());
+            return  false;
         }
 
         // put end pt.
@@ -274,10 +286,6 @@ public class MapActivity extends Activity implements MapEventsReceiver {
         // create start & end point overlay.
         mStartOverlay = createMarkerOverlay2(mStartPoint, R.drawable.start);
         mEndOverlay = createMarkerOverlay2(mEndPoint, R.drawable.dest);
-
-        // refresh info panel.
-        mRoutingInfo.setText("Room: " + mStartRoom + "\nDistance: " + (int)road.GetLength_GeoCoord() + "m away!");
-        mRoutingInfoLayout.setVisibility(View.VISIBLE);
 
         return true;
     }

@@ -94,6 +94,7 @@ public class nftActivity extends Activity implements OrientationSensorInterface 
         super.onCreate(savedInstanceState);
 
         mInstance = this;
+        mRoomNumber = -1;
 
         orientationSensor = new Orientation(this.getApplicationContext(), this);
 
